@@ -16,7 +16,6 @@ import java.net.SocketAddress;
 @ChannelHandler.Sharable
 public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogManager.getLogger();
-    private boolean denied = false;
 
     @Override
     public void channelActive(@NotNull ChannelHandlerContext ctx) throws Exception {
@@ -25,27 +24,15 @@ public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
         String hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
         RuleType ruleType = ProxyConfig.rules.getEffectiveRuleType(hostAddress);
         if (ruleType == RuleType.DENY) {
-            ctx.channel().close();
-            denied = true;
-            return;
-        }
-        super.channelActive(ctx);
-    }
-
-    @Override
-    public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
-        if (denied) {
             if (ProxyConfig.debug) {
-                SocketAddress socketAddress = ctx.channel().remoteAddress();
-                if (!(socketAddress instanceof InetSocketAddress)) return;
-                String hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
                 RuleCheckResult result = ProxyConfig.rules.getEffectiveRuleResult(hostAddress);
                 LOGGER.info("Denied connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
             } else if (ProxyConfig.verbose) {
                 LOGGER.info("Denied connection from {}", ctx.channel().remoteAddress());
             }
+            ctx.channel().close();
             return;
         }
-        super.channelInactive(ctx);
+        super.channelActive(ctx);
     }
 }
