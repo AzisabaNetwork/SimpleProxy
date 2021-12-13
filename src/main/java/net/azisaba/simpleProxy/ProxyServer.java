@@ -104,6 +104,7 @@ public class ProxyServer {
         List<String> args = new ArrayList<>(Arrays.asList(input.split("\\s+")));
         if (args.isEmpty()) return;
         String command = args.remove(0);
+        if (command.isEmpty()) return;
         CommandHandler handler = commandManager.getCommandHandler(command);
         if (handler == null) {
             LOGGER.info(Util.ANSI_RED + "Unknown command. Type 'help' to show available commands." + Util.ANSI_RESET);
