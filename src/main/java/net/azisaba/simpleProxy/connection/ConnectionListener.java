@@ -16,6 +16,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyMessageEncoder;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import net.azisaba.simpleProxy.config.ServerInfo;
 import net.azisaba.simpleProxy.config.ListenerInfo;
 import net.azisaba.simpleProxy.config.ProxyConfig;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ConnectionListener {
@@ -94,7 +96,9 @@ public class ConnectionListener {
                         try {
                             ch.config().setTcpNoDelay(true);
                         } catch (ChannelException ignore) {}
-                        ch.pipeline().addFirst("rule_check_handler", new RuleCheckHandler());
+                        ch.pipeline()
+                                .addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS))
+                                .addFirst("rule_check_handler", new RuleCheckHandler());
                         if (listenerInfo.isProxyProtocol()) {
                             ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());
                         }

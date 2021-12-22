@@ -9,6 +9,7 @@ epoll: true # optional (default: true): uses epoll on linux if available; no eff
 listeners:
 - listenPort: 25565 # port number to listen at
   proxyProtocol: true # optional (default: false): whether the proxy protocol should be enabled for this listener
+  timeout: 3000 # custom timeout duration in milliseconds (default: 30000 = 30 seconds)
   servers: # server is selected randomly when a user tries to connect
   - host: 10.0.0.1
     port: 25565
@@ -18,6 +19,9 @@ listeners:
     proxyProtocol: false
 debug: false
 verbose: false
+# Rule type must be one of these: deny, allow
+#   deny - disconnects immediately after the connection
+#   allow - accepts the connection
 # Example of acceptable syntax for rules:
 # - deny connections from 1.1.1.1/32
 # - deny from ip 1.1.1.1/32
@@ -28,7 +32,7 @@ verbose: false
 # - allow ::1
 # Example of unacceptable (invalid) syntax:
 # - drop from 1.1.1.1 (rule type of "drop" isn't supported)
-# - accept from 1.1.1.1 (rule type of "accept" does not exist)
+# - accept from 1.1.1.1 (rule type of "accept" isn't supported)
 # - pls accept from all (first token must be rule type)
 # - deny from all (please specify 0.0.0.0/0 (v4) and/or ::/0 (v6) manually)
 # Defaults to ALLOW if ip address is not in any of defined rules
@@ -38,5 +42,4 @@ rules:
   - allow from ::1
   - deny from ::/0
   - deny from 0.0.0.0/0
-
 ```

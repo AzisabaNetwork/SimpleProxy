@@ -33,6 +33,7 @@ public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
             ctx.channel().close();
             return;
         }
+        ctx.channel().pipeline().remove(this);
         super.channelActive(ctx);
     }
 }
