@@ -53,7 +53,8 @@ public class Rule {
                 }
                 continue;
             }
-            if (tokens == 2 || currentWord.isAllowedForNextWord(Words.$IP_ADDRESS)) {
+            boolean expectsIPOrCIDR = currentWord.isAllowedForNextWord(Words.$IP_ADDRESS);
+            if (tokens == 2 || expectsIPOrCIDR) {
                 rawNetwork = token;
                 network = new IPAddressString(token);
                 if (network.isValid()) {
@@ -64,7 +65,11 @@ public class Rule {
                 }
                 currentWord = Words.parse(token);
                 if (currentWord == Words.$INVALID) {
-                    throw new InvalidArgumentException("Invalid token").withContext(reader, offset, token.length());
+                    String additionalInfo = "";
+                    if (expectsIPOrCIDR) {
+                        additionalInfo = " (Expected IP address or CIDR notation)";
+                    }
+                    throw new InvalidArgumentException("Invalid token" + additionalInfo).withContext(reader, offset, token.length());
                 }
             }
         }

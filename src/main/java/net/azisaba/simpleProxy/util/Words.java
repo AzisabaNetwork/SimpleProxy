@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+@SuppressWarnings("unused")
 public enum Words {
     $INVALID,
     $IP_ADDRESS,
@@ -15,14 +16,14 @@ public enum Words {
     CONNECTION(FROM),
     ;
 
-    private final List<Words> nextAllowedWords;
+    private final List<Words> acceptableWords;
 
-    Words(Words... nextAllowedWords) {
-        this.nextAllowedWords = Arrays.asList(nextAllowedWords);
+    Words(Words... acceptableWords) {
+        this.acceptableWords = Arrays.asList(acceptableWords);
     }
 
     public boolean isAllowedForNextWord(@NotNull Words word) {
-        return nextAllowedWords.contains(word);
+        return acceptableWords.contains(word);
     }
 
     @NotNull

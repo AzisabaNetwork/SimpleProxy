@@ -16,6 +16,10 @@ public class StringReader {
         return text;
     }
 
+    public int length() {
+        return text.length();
+    }
+
     public int getIndex() {
         return index;
     }

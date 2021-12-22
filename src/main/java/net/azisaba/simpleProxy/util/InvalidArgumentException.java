@@ -5,9 +5,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-
 public class InvalidArgumentException extends Exception {
+    private String generatedMessage = "<message not yet generated>";
     private StringReader context;
     private int length = 1;
 
@@ -16,15 +15,16 @@ public class InvalidArgumentException extends Exception {
     }
 
     public InvalidArgumentException(@Nullable String message) {
-        super(message);
+        this(message, null);
+    }
+
+    public InvalidArgumentException(@Nullable Throwable cause) {
+        this(null, cause);
     }
 
     public InvalidArgumentException(@Nullable String message, @Nullable Throwable cause) {
         super(message, cause);
-    }
-
-    public InvalidArgumentException(@Nullable Throwable cause) {
-        super(cause);
+        generateMessage();
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -54,6 +54,7 @@ public class InvalidArgumentException extends Exception {
     @NotNull
     public InvalidArgumentException withContext(@NotNull StringReader reader) {
         this.context = reader;
+        generateMessage();
         return this;
     }
 
@@ -62,27 +63,35 @@ public class InvalidArgumentException extends Exception {
         this.context = reader.copy();
         this.context.setIndex(Math.min(this.context.getText().length(), Math.max(0, this.context.getIndex() + offset)));
         this.length = Math.max(1, length);
+        generateMessage();
         return this;
     }
 
-    @Override
-    public String getMessage() {
+    private void generateMessage() {
         try {
             StringBuilder sb = new StringBuilder(super.getMessage());
             if (context != null) {
                 int index = context.getIndex();
                 String prev = context.peek(-10);
-                String next = context.readSafe(Math.max(10, length));
+                String next = context.readSafe(length + 10);
                 int cursor = Math.min(10, index);
-                sb.append("\n").append(prev).append(next);
-                sb.append("\n").append(Strings.repeat(" ", cursor)).append("^").append(Strings.repeat("~", length - 1));
+                sb.append("\n");
+                if (index > 10) sb.append("...");
+                sb.append(prev).append(next);
+                if (context.length() > index + 10) sb.append("...");
+                sb.append("\n");
+                if (index > 10) sb.append("   ");
+                sb.append(Strings.repeat(" ", cursor)).append("^").append(Strings.repeat("~", length - 1));
                 context.setIndex(index);
             }
-            return sb.toString();
+            this.generatedMessage = sb.toString();
         } catch (Throwable t) {
-            System.err.println("uh oh");
-            t.printStackTrace();
-            return super.toString() + Arrays.toString(t.getStackTrace());
+            throw new RuntimeException(t);
         }
+    }
+
+    @Override
+    public String getMessage() {
+        return this.generatedMessage;
     }
 }
