@@ -21,7 +21,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j18-impl:$log4jVersion")
     implementation("org.slf4j:slf4j-api:1.8.0-beta4")
     implementation("com.github.seancfoley:ipaddress:5.3.3")
-    compileOnly("org.jetbrains:annotations:22.0.0")
+    compileOnly("org.jetbrains:annotations:23.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
