@@ -13,7 +13,7 @@ repositories {
 val log4jVersion = "2.17.0"
 
 dependencies {
-    implementation("io.netty:netty-all:4.1.70.Final")
+    implementation("io.netty:netty-all:4.1.72.Final")
     implementation("org.yaml:snakeyaml:1.29")
     implementation("commons-logging:commons-logging:1.2")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
