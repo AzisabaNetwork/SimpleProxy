@@ -49,7 +49,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         } else {
             proxiedProtocol = HAProxyProxiedProtocol.TCP4;
         }
-        SocketAddress socketAddress = forwarder.channel.localAddress();
+        SocketAddress socketAddress = forwarder.channel.remoteAddress();
         InetSocketAddress inetSocketAddress;
         if (socketAddress instanceof InetSocketAddress) {
             inetSocketAddress = (InetSocketAddress) socketAddress;
