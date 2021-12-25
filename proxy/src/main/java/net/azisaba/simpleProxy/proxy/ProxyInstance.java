@@ -27,15 +27,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ProxyInstance implements ProxyServer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static ProxyInstance instance;
     private final AtomicLong workerId = new AtomicLong();
-    private final Executor workerThreadPool = Executors.newCachedThreadPool(r -> new Thread(() -> {
+    private final ExecutorService workerThreadPool = Executors.newCachedThreadPool(r -> new Thread(() -> {
         LOGGER.debug("Thread {} started", Thread.currentThread().getName());
         try {
             r.run();
@@ -226,6 +227,14 @@ public class ProxyInstance implements ProxyServer {
             LOGGER.warn("Failed to close plugin loader", e);
         }
         fullyCloseListeners();
+        LOGGER.info("Shutting down executor");
+        workerThreadPool.shutdownNow();
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            workerThreadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         LOGGER.info("Goodbye!");
     }
 }
