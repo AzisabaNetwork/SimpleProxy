@@ -20,12 +20,13 @@ public class Util {
     @NotNull
     public static String readLine() throws IOException {
         StringBuilder sb = new StringBuilder();
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             int i = System.in.read();
             if (i == -1 || i == 10) return sb.toString();
             char c = (char) i;
             sb.append(c);
         }
+        return sb.toString();
     }
 
     @NotNull
