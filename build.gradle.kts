@@ -2,6 +2,7 @@ plugins {
     java
     id("com.github.johnrengelman.shadow") version "7.1.1"
     `java-library`
+    `maven-publish`
 }
 
 group = "net.azisaba.simpleProxy"
@@ -14,6 +15,7 @@ subprojects {
         plugin("java")
         plugin("com.github.johnrengelman.shadow")
         plugin("java-library")
+        plugin("maven-publish")
     }
 
     group = parent!!.group
@@ -53,6 +55,23 @@ subprojects {
                 attributes(
                     "Main-Class" to "net.azisaba.simpleProxy.Main",
                     "Multi-Release" to true,
+                )
+            }
+        }
+    }
+}
+
+allprojects {
+    publishing {
+        repositories {
+            maven {
+                name = "repo"
+                credentials(PasswordCredentials::class)
+                url = uri(
+                    if (project.version.toString().endsWith("SNAPSHOT"))
+                        project.findProperty("deploySnapshotURL") ?: System.getProperty("deploySnapshotURL", "")
+                    else
+                        project.findProperty("deployReleasesURL") ?: System.getProperty("deployReleasesURL", "")
                 )
             }
         }
