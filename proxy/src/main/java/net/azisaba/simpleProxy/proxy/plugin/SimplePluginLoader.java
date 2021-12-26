@@ -6,9 +6,12 @@ import net.azisaba.simpleProxy.api.plugin.loader.PluginFile;
 import net.azisaba.simpleProxy.api.plugin.loader.PluginLoader;
 import net.azisaba.simpleProxy.api.yaml.YamlConfiguration;
 import net.azisaba.simpleProxy.api.yaml.YamlObject;
+import net.azisaba.simpleProxy.proxy.ProxyInstance;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class SimplePluginLoader implements PluginLoader {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -53,6 +57,7 @@ public class SimplePluginLoader implements PluginLoader {
 
     @Override
     public void loadPlugins() throws IOException {
+        if (!isEnabled()) throw new UnsupportedOperationException("Plugin loader is not enabled");
         Files.walk(pluginsDir, FileVisitOption.FOLLOW_LINKS).forEach(path -> {
             if (!Files.isRegularFile(path)) return;
             if (!JAR_MATCHER.matches(path)) return;
@@ -94,6 +99,16 @@ public class SimplePluginLoader implements PluginLoader {
         });
     }
 
+    @Nullable
+    @Override
+    public Plugin getPlugin(@NotNull String id) {
+        Objects.requireNonNull(id, "id cannot be null");
+        for (Plugin plugin : plugins) {
+            if (id.equals(plugin.getId())) return plugin;
+        }
+        return null;
+    }
+
     @NotNull
     @Override
     public PluginDescriptionFile loadPluginDescriptionFile(@NotNull PluginFile pluginFile) throws IOException {
@@ -113,5 +128,15 @@ public class SimplePluginLoader implements PluginLoader {
     @Override
     public List<Plugin> getPlugins() {
         return Collections.unmodifiableList(plugins);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return !ProxyConfig.disablePlugins;
+    }
+
+    @Override
+    public void disablePlugin(@NotNull Plugin plugin) {
+        ProxyInstance.getInstance().getEventManager().unregisterEvents(plugin);
     }
 }

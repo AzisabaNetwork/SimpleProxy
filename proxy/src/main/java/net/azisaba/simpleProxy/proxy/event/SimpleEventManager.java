@@ -8,13 +8,13 @@ import net.azisaba.simpleProxy.api.event.EventPriority;
 import net.azisaba.simpleProxy.api.event.HandlerList;
 import net.azisaba.simpleProxy.api.plugin.Plugin;
 import net.azisaba.simpleProxy.api.util.ThrowableConsumer;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -89,8 +89,10 @@ public class SimpleEventManager implements EventManager {
     @NotNull
     @Override
     public <T extends Event> T callEvent(@NotNull T event) {
-        Objects.requireNonNull(event, "event cannot be null");
-        getHandlerList(event.getClass()).fire(event);
+        if (isEnabled()) {
+            Objects.requireNonNull(event, "event cannot be null");
+            getHandlerList(event.getClass()).fire(event);
+        }
         return event;
     }
 
@@ -116,5 +118,10 @@ public class SimpleEventManager implements EventManager {
             throw new IllegalArgumentException("Cannot get handler list of " + event.getTypeName());
         }
         return handlerMap.computeIfAbsent(event, e -> new HandlerList());
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return !ProxyConfig.disablePlugins;
     }
 }

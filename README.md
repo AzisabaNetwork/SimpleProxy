@@ -21,8 +21,9 @@ listeners:
   - host: 10.0.0.2
     port: 25565
     proxyProtocol: false
-debug: false
-verbose: false
+disablePlugins: false # whether to prevent loading plugins (default: false)
+debug: false # enable only if you want more verbose logging. this may or may not affect performance (default: false)
+verbose: false # if enabled, rule check handler will log a message when denying connection (default: true)
 # Rule type must be one of these: deny, allow
 #   deny - disconnects immediately after the connection
 #   allow - accepts the connection

@@ -81,13 +81,15 @@ public class ProxyInstance implements ProxyServer {
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "Server Shutdown Thread"));
         reloadConfig().join();
         registerCommands();
-        LOGGER.info("Loading plugins");
-        try {
-            pluginLoader.loadPlugins();
-        } catch (IOException e) {
-            LOGGER.warn("Failed to load plugins", e);
+        if (pluginLoader.isEnabled()) {
+            LOGGER.info("Loading plugins");
+            try {
+                pluginLoader.loadPlugins();
+            } catch (IOException e) {
+                LOGGER.warn("Failed to load plugins", e);
+            }
+            LOGGER.info("Loaded {} plugins", pluginLoader.getPlugins().size());
         }
-        LOGGER.info("Loaded {} plugins", pluginLoader.getPlugins().size());
         startWaitThread(startConsoleInputThread());
         long time = System.currentTimeMillis() - start;
         LOGGER.info("Proxy initialization done in {} ms", time);
@@ -168,6 +170,8 @@ public class ProxyInstance implements ProxyServer {
                 LOGGER.fatal("Could not load proxy configuration", e);
                 throw new RuntimeException(e);
             }
+            if (!pluginLoader.isEnabled()) LOGGER.info("Plugin loader is disabled");
+            if (!eventManager.isEnabled()) LOGGER.info("Event manager is disabled");
             List<ListenerInfo> listeners = ProxyConfig.getValidListeners();
             if (listeners.isEmpty()) {
                 LOGGER.warn("No valid listeners defined");

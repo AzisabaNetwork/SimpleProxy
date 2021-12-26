@@ -9,12 +9,15 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class SimpleCommandManager implements CommandManager {
     private final Map<String, CommandHandler> commands = new HashMap<>();
 
     @Override
     public void registerCommand(@NotNull String command, @NotNull CommandHandler handler) {
+        Objects.requireNonNull(command, "command cannot be null");
+        Objects.requireNonNull(handler, "handler cannot be null");
         if (commands.containsKey(command)) {
             throw new IllegalArgumentException("Command conflict: " + command + " (" + commands.get(command).getClass().getTypeName() + ")");
         }

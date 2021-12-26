@@ -49,7 +49,7 @@ public interface EventManager {
     void unregisterEvents(@NotNull Object listener);
 
     /**
-     * Calls an event.
+     * Calls an event. This method does nothing if the event manager is not enabled.
      * @param event the event
      * @throws IllegalStateException when an event is fired from wrong thread.
      * @return the fired event
@@ -78,4 +78,11 @@ public interface EventManager {
      */
     @NotNull
     HandlerList getHandlerList(@NotNull Class<? extends Event> event);
+
+    /**
+     * Checks if the event manager is enabled. If disabled, events will not be fired at all. Listeners can still be
+     * registered even if the event manager is disabled.
+     * @return whether if the event manager is enabled
+     */
+    boolean isEnabled();
 }

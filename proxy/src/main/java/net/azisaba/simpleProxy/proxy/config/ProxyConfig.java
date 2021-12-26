@@ -93,6 +93,9 @@ public class ProxyConfig {
     @SerializedName("verbose")
     public static boolean verbose = true;
 
+    @SerializedName("disablePlugins")
+    public static boolean disablePlugins = false;
+
     public static boolean isEpoll() {
         return epoll && Epoll.isAvailable();
     }
