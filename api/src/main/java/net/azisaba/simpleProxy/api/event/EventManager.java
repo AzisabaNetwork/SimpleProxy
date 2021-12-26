@@ -74,10 +74,7 @@ public interface EventManager {
      * Returns a handler list for an event class.
      * @param event the class of an event
      * @return handler list
-     * @throws IllegalArgumentException getHandlerList method is not static
-     * @throws IllegalArgumentException getHandlerList method returned null
-     * @throws IllegalArgumentException getHandlerList method is inaccessible
-     * @throws IllegalArgumentException getHandlerList method threw exception
+     * @throws IllegalArgumentException if event class is annotated with @AbstractEvent or is abstract class
      */
     @NotNull
     HandlerList getHandlerList(@NotNull Class<? extends Event> event);

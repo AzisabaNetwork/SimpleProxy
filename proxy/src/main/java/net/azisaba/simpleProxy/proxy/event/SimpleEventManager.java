@@ -112,7 +112,9 @@ public class SimpleEventManager implements EventManager {
     @Override
     public HandlerList getHandlerList(@NotNull Class<? extends Event> event) {
         Objects.requireNonNull(event, "event cannot be null");
-        if (event.isAnnotationPresent(AbstractEvent.class)) throw new IllegalArgumentException("Cannot get handler list of " + event.getTypeName());
+        if (Modifier.isAbstract(event.getModifiers()) || event.isAnnotationPresent(AbstractEvent.class)) {
+            throw new IllegalArgumentException("Cannot get handler list of " + event.getTypeName());
+        }
         return handlerMap.computeIfAbsent(event, e -> new HandlerList());
     }
 }
