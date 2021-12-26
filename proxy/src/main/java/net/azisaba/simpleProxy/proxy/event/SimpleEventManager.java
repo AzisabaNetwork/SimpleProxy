@@ -55,7 +55,7 @@ public class SimpleEventManager implements EventManager {
                 logInvalidHandler(method, "parameter type is not assignable from " + Event.class.getTypeName(), plugin);
                 continue;
             }
-            if (Modifier.isPublic(method.getModifiers())) {
+            if (!Modifier.isPublic(method.getModifiers())) {
                 logInvalidHandler(method, "method is not public", plugin);
                 continue;
             }
