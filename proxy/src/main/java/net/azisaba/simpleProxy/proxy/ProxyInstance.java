@@ -36,7 +36,7 @@ public class ProxyInstance implements ProxyServer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static ProxyInstance instance;
     private final AtomicLong workerId = new AtomicLong();
-    private final ExecutorService workerThreadPool = Executors.newCachedThreadPool(r -> new Thread(() -> {
+    private final ExecutorService worker = Executors.newCachedThreadPool(r -> new Thread(() -> {
         LOGGER.debug("Thread {} started", Thread.currentThread().getName());
         try {
             r.run();
@@ -94,7 +94,7 @@ public class ProxyInstance implements ProxyServer {
     }
 
     private void startWaitThread(Thread consoleInputThread) {
-        new Thread(() -> {
+        worker.execute(() -> {
             while (!stopping) {
                 try {
                     //noinspection BusyWait
@@ -105,7 +105,7 @@ public class ProxyInstance implements ProxyServer {
                 }
             }
             consoleInputThread.interrupt();
-        }, "Wait Thread").start();
+        });
     }
 
     @NotNull
@@ -180,7 +180,7 @@ public class ProxyInstance implements ProxyServer {
                 connectionListener.listen(listener);
             }
             ProxyReloadEvent.INSTANCE.callEvent();
-        }, workerThreadPool);
+        }, worker);
     }
 
     @NotNull
@@ -228,10 +228,10 @@ public class ProxyInstance implements ProxyServer {
         }
         fullyCloseListeners();
         LOGGER.info("Shutting down executor");
-        workerThreadPool.shutdownNow();
+        worker.shutdownNow();
         try {
             //noinspection ResultOfMethodCallIgnored
-            workerThreadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            worker.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
