@@ -1,18 +1,26 @@
 package net.azisaba.simpleProxy.api.event.connection;
 
 import io.netty.channel.Channel;
-import net.azisaba.simpleProxy.api.event.Event;
+import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import org.jetbrains.annotations.NotNull;
 
-public class RemoteConnectionInitEvent extends Event {
-    private final Channel channel;
+import java.net.SocketAddress;
 
-    public RemoteConnectionInitEvent(@NotNull Channel channel) {
-        this.channel = channel;
+public class RemoteConnectionInitEvent extends ConnectionInitEvent {
+    private final SocketAddress sourceAddress;
+
+    public RemoteConnectionInitEvent(@NotNull ListenerInfo listenerInfo, @NotNull Channel channel, @NotNull SocketAddress sourceAddress) {
+        super(listenerInfo, channel);
+        this.sourceAddress = sourceAddress;
     }
 
+    /**
+     * Returns the source address (= user's ip, not proxy/remote's ip) of connection. Returned type of value is
+     * always InetSocketAddress for {@link net.azisaba.simpleProxy.api.config.Protocol#UDP UDP}.
+     * @return source address
+     */
     @NotNull
-    public Channel getChannel() {
-        return channel;
+    public SocketAddress getSourceAddress() {
+        return sourceAddress;
     }
 }

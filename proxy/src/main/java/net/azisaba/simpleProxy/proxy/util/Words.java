@@ -16,6 +16,7 @@ public enum Words {
     CONNECTION(FROM),
     ;
 
+    @SuppressWarnings("ImmutableEnumChecker")
     private final List<Words> acceptableWords;
 
     Words(Words... acceptableWords) {

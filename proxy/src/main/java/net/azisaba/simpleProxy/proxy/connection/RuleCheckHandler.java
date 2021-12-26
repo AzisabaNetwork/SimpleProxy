@@ -35,6 +35,11 @@ public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
             }
             ctx.channel().close();
             return;
+        } else if (ruleType == RuleType.ALLOW) {
+            if (ProxyConfig.debug) {
+                RuleCheckResult result = ProxyConfig.rules.getEffectiveRuleResult(hostAddress);
+                LOGGER.info("Allowed connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
+            }
         }
         ctx.channel().pipeline().remove(this);
         super.channelActive(ctx);

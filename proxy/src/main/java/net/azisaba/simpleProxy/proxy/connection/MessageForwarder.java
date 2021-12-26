@@ -5,9 +5,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import net.azisaba.simpleProxy.api.config.ListenerInfo;
+import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
-import net.azisaba.simpleProxy.proxy.config.ServerInfo;
-import net.azisaba.simpleProxy.proxy.config.ListenerInfo;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,10 +22,10 @@ import java.util.Queue;
 public class MessageForwarder extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final ListenerInfo listenerInfo;
-    private final Queue<Object> queue = new ArrayDeque<>();
-    final Channel channel;
-    private Channel remote = null;
+    public final ListenerInfo listenerInfo;
+    protected final Queue<Object> queue = new ArrayDeque<>();
+    protected Channel channel;
+    protected Channel remote = null;
     boolean deactivated = false;
     boolean isRemoteActive = false;
 
@@ -52,6 +52,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         super.channelInactive(ctx);
         deactivated = true;
         ctx.channel().close();
+        if (remote != null) remote.close();
         LOGGER.info("Forwarder: Closed connection: " + ctx.channel());
     }
 
@@ -68,7 +69,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
             ctx.channel().close();
             return;
         }
-        if (!remote.isActive()) {
+        if (remote == null || !remote.isActive()) {
             queue.add(msg);
             return;
         }

@@ -53,7 +53,7 @@ subprojects {
         withType<Jar> {
             manifest {
                 attributes(
-                    "Main-Class" to "net.azisaba.simpleProxy.Main",
+                    "Main-Class" to "net.azisaba.simpleProxy.proxy.Main",
                     "Multi-Release" to true,
                 )
             }

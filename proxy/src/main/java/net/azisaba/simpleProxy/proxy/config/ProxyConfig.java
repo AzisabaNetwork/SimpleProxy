@@ -44,7 +44,7 @@ public class ProxyConfig {
         if (listeners != null) {
             listeners.<Map<String, Object>>forEachAsType(obj -> {
                 if (obj == null) return;
-                ProxyConfig.listeners.add(new ListenerInfo(new YamlObject(YamlConfiguration.DEFAULT, obj)));
+                ProxyConfig.listeners.add(new ListenerInfoImpl(new YamlObject(obj)));
             });
         }
         YamlArray rules = config.getArray("rules");
@@ -75,10 +75,10 @@ public class ProxyConfig {
         debug = false;
     }
 
-    public static List<ListenerInfo> listeners = new ArrayList<>();
+    public static List<ListenerInfoImpl> listeners = new ArrayList<>();
 
     @NotNull
-    public static List<ListenerInfo> getValidListeners() {
+    public static List<ListenerInfoImpl> getValidListeners() {
         return listeners.stream().filter(info -> !info.getServers().isEmpty()).collect(Collectors.toList());
     }
 

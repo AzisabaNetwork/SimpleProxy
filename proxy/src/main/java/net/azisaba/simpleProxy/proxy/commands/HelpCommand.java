@@ -1,7 +1,7 @@
 package net.azisaba.simpleProxy.proxy.commands;
 
-import net.azisaba.simpleProxy.proxy.ProxyInstance;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
+import net.azisaba.simpleProxy.proxy.ProxyInstance;
 import net.azisaba.simpleProxy.proxy.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

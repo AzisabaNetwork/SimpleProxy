@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 public class SimplePluginLoader implements PluginLoader {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -60,19 +61,21 @@ public class SimplePluginLoader implements PluginLoader {
     @Override
     public void loadPlugins() throws IOException {
         if (!isEnabled()) throw new UnsupportedOperationException("Plugin loader is not enabled");
-        Files.walk(pluginsDir, FileVisitOption.FOLLOW_LINKS).forEach(path -> {
-            if (!Files.isRegularFile(path)) return;
-            if (!path.getFileName().toString().endsWith(".jar")) return;
-            try {
-                PluginDescriptionFile description;
-                try (PluginFile pluginFile = new PluginFile(path.toFile())) {
-                    description = loadPluginDescriptionFile(pluginFile);
+        try (Stream<Path> stream = Files.walk(pluginsDir, FileVisitOption.FOLLOW_LINKS)) {
+            stream.forEach(path -> {
+                if (!Files.isRegularFile(path)) return;
+                if (!path.getFileName().toString().endsWith(".jar")) return;
+                try {
+                    PluginDescriptionFile description;
+                    try (PluginFile pluginFile = new PluginFile(path.toFile())) {
+                        description = loadPluginDescriptionFile(pluginFile);
+                    }
+                    preloadData.put(description.id, new PluginPreloadData(description, path));
+                } catch (IOException e) {
+                    LOGGER.error("Failed to preload plugin {}", path, e);
                 }
-                preloadData.put(description.id, new PluginPreloadData(description, path));
-            } catch (IOException e) {
-                LOGGER.error("Failed to preload plugin {}", path, e);
-            }
-        });
+            });
+        }
         for (PluginPreloadData data : new ArrayList<>(preloadData.values())) {
             try {
                 loadPlugin(data.description, data.path);

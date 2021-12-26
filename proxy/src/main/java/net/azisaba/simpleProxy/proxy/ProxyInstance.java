@@ -9,7 +9,7 @@ import net.azisaba.simpleProxy.proxy.commands.DebugRuleCommand;
 import net.azisaba.simpleProxy.proxy.commands.HelpCommand;
 import net.azisaba.simpleProxy.proxy.commands.ReloadCommand;
 import net.azisaba.simpleProxy.proxy.commands.StopCommand;
-import net.azisaba.simpleProxy.proxy.config.ListenerInfo;
+import net.azisaba.simpleProxy.proxy.config.ListenerInfoImpl;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import net.azisaba.simpleProxy.proxy.connection.ConnectionListener;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
@@ -174,7 +174,7 @@ public class ProxyInstance implements ProxyServer {
             }
             if (!pluginLoader.isEnabled()) LOGGER.info("Plugin loader is disabled");
             if (!eventManager.isEnabled()) LOGGER.info("Event manager is disabled");
-            List<ListenerInfo> listeners = ProxyConfig.getValidListeners();
+            List<ListenerInfoImpl> listeners = ProxyConfig.getValidListeners();
             if (listeners.isEmpty()) {
                 LOGGER.warn("No valid listeners defined");
             }
@@ -182,7 +182,7 @@ public class ProxyInstance implements ProxyServer {
             if (connectionListener == null) {
                 connectionListener = new ConnectionListener();
             }
-            for (ListenerInfo listener : listeners) {
+            for (ListenerInfoImpl listener : listeners) {
                 try {
                     connectionListener.listen(listener);
                 } catch (Exception e) {

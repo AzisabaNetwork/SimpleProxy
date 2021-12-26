@@ -1,17 +1,15 @@
 package net.azisaba.simpleProxy.proxy.connection;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.handler.codec.haproxy.HAProxyCommand;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
-import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -22,15 +20,17 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
-public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
+public class UDPMessageForwarderForwarder extends SimpleChannelInboundHandler<DatagramPacket> {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected final MessageForwarder forwarder;
+    protected final UDPMessageForwarder forwarder;
     protected final ServerInfo serverInfo;
+    protected final InetSocketAddress sourceAddress;
 
-    public MessageForwarderForwarder(MessageForwarder forwarder, @NotNull ServerInfo serverInfo) {
+    public UDPMessageForwarderForwarder(UDPMessageForwarder forwarder, @NotNull ServerInfo serverInfo, @NotNull InetSocketAddress sourceAddress) {
         this.forwarder = forwarder;
         this.serverInfo = serverInfo;
+        this.sourceAddress = sourceAddress;
     }
 
     @Override
@@ -40,36 +40,19 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
             initHAProxy(ctx);
         }
         ctx.read();
-        forwarder.remoteActive();
+        forwarder.remoteActive(ctx.channel());
         LOGGER.info("Remote: Established connection: " + ctx.channel());
     }
 
     public void initHAProxy(@NotNull ChannelHandlerContext ctx) throws UnknownHostException {
         HAProxyProxiedProtocol proxiedProtocol;
         if (InetAddress.getByName(serverInfo.getHost()) instanceof Inet6Address) {
-            if (forwarder.listenerInfo.getProtocol() == Protocol.TCP) {
-                proxiedProtocol = HAProxyProxiedProtocol.TCP6;
-            } else {
-                proxiedProtocol = HAProxyProxiedProtocol.UDP6;
-            }
+            proxiedProtocol = HAProxyProxiedProtocol.UDP6;
         } else {
-            if (forwarder.listenerInfo.getProtocol() == Protocol.TCP) {
-                proxiedProtocol = HAProxyProxiedProtocol.TCP4;
-            } else {
-                proxiedProtocol = HAProxyProxiedProtocol.UDP4;
-            }
+            proxiedProtocol = HAProxyProxiedProtocol.UDP4;
         }
-        SocketAddress socketAddress = forwarder.channel.remoteAddress();
-        String hostAddress = null;
-        int port = 0;
-        if (socketAddress instanceof InetSocketAddress) {
-            hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
-            port = ((InetSocketAddress) socketAddress).getPort();
-        } else if (socketAddress instanceof DomainSocketAddress) {
-            hostAddress = ((DomainSocketAddress) socketAddress).path();
-        } else {
-            LOGGER.warn("Unrecognized socket address type {}: {}", socketAddress.getClass().getTypeName(), socketAddress);
-        }
+        String hostAddress = sourceAddress.getAddress().getHostAddress();
+        int port = sourceAddress.getPort();
         ctx.channel().writeAndFlush(new HAProxyMessage(
                 HAProxyProtocolVersion.V2,
                 HAProxyCommand.PROXY,
@@ -82,13 +65,10 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         if (forwarder.deactivated || !ctx.channel().isActive()) {
             ctx.channel().close();
             return;
-        }
-        if (ProxyConfig.debug && msg instanceof ByteBuf) {
-            LOGGER.debug("< IN: " + ((ByteBuf) msg).readableBytes());
         }
         forwarder.channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {

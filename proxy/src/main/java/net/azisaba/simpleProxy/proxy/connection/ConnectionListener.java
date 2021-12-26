@@ -2,30 +2,35 @@ package net.azisaba.simpleProxy.proxy.connection;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyMessageEncoder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import net.azisaba.simpleProxy.api.config.ListenerInfo;
+import net.azisaba.simpleProxy.api.config.Protocol;
+import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.connection.ConnectionInitEvent;
 import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionInitEvent;
-import net.azisaba.simpleProxy.proxy.config.ServerInfo;
-import net.azisaba.simpleProxy.proxy.config.ListenerInfo;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +41,11 @@ public class ConnectionListener {
     private static final AtomicLong BOSS_THREAD_COUNT = new AtomicLong();
     private static final AtomicLong WORKER_THREAD_COUNT = new AtomicLong();
     private static final AtomicLong CLIENT_WORKER_THREAD_COUNT = new AtomicLong();
-    private final Class<? extends ServerSocketChannel> serverSocketChannelType;
-    private final Class<? extends SocketChannel> socketChannelType;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final EventLoopGroup clientWorkerGroup;
-    private final List<ChannelFuture> futures = new ArrayList<>();
+    @VisibleForTesting
+    public final List<ChannelFuture> futures = new ArrayList<>();
 
     public ConnectionListener() {
         if (ProxyConfig.isEpoll()) {
@@ -60,8 +64,6 @@ public class ConnectionListener {
                 t.setName("Netty Epoll IO Client Worker Thread #" + CLIENT_WORKER_THREAD_COUNT.incrementAndGet());
                 return t;
             });
-            serverSocketChannelType = EpollServerSocketChannel.class;
-            socketChannelType = EpollSocketChannel.class;
             LOGGER.info("Using epoll channel type");
         } else {
             bossGroup = new NioEventLoopGroup(r -> {
@@ -79,8 +81,6 @@ public class ConnectionListener {
                 t.setName("Netty IO Client Worker Thread #" + CLIENT_WORKER_THREAD_COUNT.incrementAndGet());
                 return t;
             });
-            serverSocketChannelType = NioServerSocketChannel.class;
-            socketChannelType = NioSocketChannel.class;
             LOGGER.info("Using normal channel type");
         }
     }
@@ -90,30 +90,47 @@ public class ConnectionListener {
             LOGGER.warn("Listener for " + listenerInfo.getListenPort() + " has empty forwardTo list, skipping");
             return;
         }
-        ChannelFuture future = new ServerBootstrap().group(bossGroup, workerGroup)
-                .channel(serverSocketChannelType)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(@NotNull SocketChannel ch) {
-                        try {
-                            ch.config().setTcpNoDelay(true);
-                        } catch (ChannelException ignore) {}
-                        ch.pipeline()
-                                .addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS))
-                                .addFirst("rule_check_handler", RuleCheckHandler.INSTANCE);
-                        if (listenerInfo.isProxyProtocol()) {
-                            ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());
-                        }
-                        ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo));
-                        new ConnectionInitEvent(ch).callEvent();
+        ChannelInitializer<Channel> channelInitializer = new ChannelInitializer<Channel>() {
+            @Override
+            protected void initChannel(@NotNull Channel ch) {
+                try {
+                    if (ch instanceof SocketChannel) {
+                        ((SocketChannel) ch).config().setTcpNoDelay(true);
                     }
-                })
-                .bind(listenerInfo.getListenPort())
-                .syncUninterruptibly();
+                } catch (ChannelException ignore) {
+                }
+                ch.pipeline()
+                        .addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS))
+                        .addFirst("rule_check_handler", RuleCheckHandler.INSTANCE);
+                if (listenerInfo.isProxyProtocol()) {
+                    ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());
+                }
+                ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo));
+                new ConnectionInitEvent(listenerInfo, ch).callEvent();
+            }
+        };
+        ChannelFuture future;
+        if (listenerInfo.getProtocol() == Protocol.TCP) {
+            // TCP
+            future = new ServerBootstrap().group(bossGroup, workerGroup)
+                    .channel(listenerInfo.getProtocol().serverChannelType.asSubclass(ServerChannel.class))
+                    .childHandler(channelInitializer)
+                    .bind(listenerInfo.getHost(), listenerInfo.getListenPort())
+                    .syncUninterruptibly();
+        } else {
+            // UDP
+            future = new Bootstrap().group(workerGroup)
+                    .channel(listenerInfo.getProtocol().serverChannelType)
+                    .option(ChannelOption.SO_BROADCAST, true)
+                    .option(ChannelOption.AUTO_READ, true)
+                    .handler(new UDPMessageForwarder(null, listenerInfo))
+                    .bind(listenerInfo.getListenPort())
+                    .syncUninterruptibly();
+        }
         if (listenerInfo.isProxyProtocol()) {
             LOGGER.warn("Proxy protocol enabled for listener {}, please ensure this listener is properly firewalled.", future.channel().toString());
         }
-        LOGGER.info("Listening on {}", future.channel().toString());
+        LOGGER.info("Listening on {} ({})", future.channel().toString(), listenerInfo.getProtocol().name());
         futures.add(future);
     }
 
@@ -121,7 +138,7 @@ public class ConnectionListener {
     public ChannelFuture connect(@NotNull MessageForwarder forwarder, @NotNull ServerInfo serverInfo) {
         ChannelFuture future = new Bootstrap()
                 .group(clientWorkerGroup)
-                .channel(socketChannelType)
+                .channel(forwarder.listenerInfo.getProtocol().channelType)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(@NotNull SocketChannel ch) {
@@ -132,7 +149,27 @@ public class ConnectionListener {
                         if (serverInfo.isProxyProtocol()) {
                             ch.pipeline().addFirst("haproxy_message_encoder", HAProxyMessageEncoder.INSTANCE);
                         }
-                        new RemoteConnectionInitEvent(ch).callEvent();
+                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, forwarder.channel.remoteAddress()).callEvent();
+                    }
+                })
+                .connect(serverInfo.getHost(), serverInfo.getPort());
+        futures.add(future);
+        return future;
+    }
+
+    @NotNull
+    public ChannelFuture connect(@NotNull UDPMessageForwarder forwarder, @NotNull InetSocketAddress address, @NotNull ServerInfo serverInfo) {
+        ChannelFuture future = new Bootstrap()
+                .group(clientWorkerGroup)
+                .channel(forwarder.listenerInfo.getProtocol().channelType)
+                .handler(new ChannelInitializer<Channel>() {
+                    @Override
+                    protected void initChannel(@NotNull Channel ch) {
+                        ch.pipeline().addLast("message_forwarder_forwarder", new UDPMessageForwarderForwarder(forwarder, serverInfo, address));
+                        if (serverInfo.isProxyProtocol()) {
+                            ch.pipeline().addFirst("haproxy_message_encoder", HAProxyMessageEncoder.INSTANCE);
+                        }
+                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, address).callEvent();
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
