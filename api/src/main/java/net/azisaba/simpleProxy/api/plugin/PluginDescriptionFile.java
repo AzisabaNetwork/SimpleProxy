@@ -26,13 +26,14 @@ public class PluginDescriptionFile {
     @NotNull
     public static PluginDescriptionFile load(@NotNull YamlObject obj) {
         String id = obj.getString("id");
+        String name = obj.getString("name");
+        if (id == null) id = name;
+        if (name == null) name = id;
         String version = obj.getString("version");
         String main = obj.getString("main");
-        Objects.requireNonNull(id, "Required element 'main' is missing");
-        Objects.requireNonNull(version, "Required element 'main' is missing");
+        Objects.requireNonNull(id, "Required element 'id' or 'name' is missing");
+        Objects.requireNonNull(version, "Required element 'version' is missing");
         Objects.requireNonNull(main, "Required element 'main' is missing");
-        String name = obj.getString("name");
-        if (name == null) name = id;
         return new PluginDescriptionFile(id, name ,version, main);
     }
 }
