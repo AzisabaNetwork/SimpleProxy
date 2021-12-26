@@ -62,6 +62,16 @@ subprojects {
 }
 
 allprojects {
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    val javaComponent = components["java"] as AdhocComponentWithVariants
+    javaComponent.withVariantsFromConfiguration(configurations["sourcesElements"]) {
+        skip()
+    }
+
     publishing {
         repositories {
             maven {
@@ -73,6 +83,12 @@ allprojects {
                     else
                         project.findProperty("deployReleasesURL") ?: System.getProperty("deployReleasesURL", "")
                 )
+            }
+        }
+
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
             }
         }
     }
