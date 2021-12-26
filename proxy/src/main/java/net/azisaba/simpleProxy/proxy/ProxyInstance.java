@@ -2,6 +2,7 @@ package net.azisaba.simpleProxy.proxy;
 
 import net.azisaba.simpleProxy.api.ProxyServer;
 import net.azisaba.simpleProxy.api.ProxyServerHolder;
+import net.azisaba.simpleProxy.api.event.proxy.ProxyInitializeEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyReloadEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent;
 import net.azisaba.simpleProxy.proxy.commands.DebugRuleCommand;
@@ -93,6 +94,7 @@ public class ProxyInstance implements ProxyServer {
         startWaitThread(startConsoleInputThread());
         long time = System.currentTimeMillis() - start;
         LOGGER.info("Proxy initialization done in {} ms", time);
+        ProxyInitializeEvent.INSTANCE.callEvent();
     }
 
     private void startWaitThread(Thread consoleInputThread) {
