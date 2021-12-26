@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "net.azisaba.simpleProxy"
-version = "0.0.1"
+version = "0.0.1-SNAPSHOT"
 
 extra.set("log4jVersion", "2.17.0")
 
