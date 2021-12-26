@@ -177,7 +177,11 @@ public class ProxyInstance implements ProxyServer {
                 connectionListener = new ConnectionListener();
             }
             for (ListenerInfo listener : listeners) {
-                connectionListener.listen(listener);
+                try {
+                    connectionListener.listen(listener);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to listen port for {}:{}", listener.getHost(), listener.getListenPort(), e);
+                }
             }
             ProxyReloadEvent.INSTANCE.callEvent();
         }, worker);

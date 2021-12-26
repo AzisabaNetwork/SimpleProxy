@@ -3,11 +3,14 @@ Very simple TCP reverse proxy
 
 ## Usage
 
-First you'll need to generate (SimpleProxy will generate one if config.yml doesn't exist) or create a config.yml like this:
+First you'll need to generate (SimpleProxy will generate one if config.yml doesn't exist) or create a config.yml.
+
+Example config.yml:
 ```yaml
 epoll: true # optional (default: true): uses epoll on linux if available; no effect on Windows
 listeners:
 - listenPort: 25565 # port number to listen at
+  host: 0.0.0.0 # default: 0.0.0.0
   proxyProtocol: true # optional (default: false): whether the proxy protocol should be enabled for this listener
   timeout: 3000 # custom timeout duration in milliseconds (default: 30000 = 30 seconds)
   # ^ don't use 3 seconds as timeout in production because it is (probably) too short
