@@ -1,6 +1,9 @@
 # SimpleProxy
 Very simple TCP reverse proxy
 
+## Requirements
+- Java 11 or later
+
 ## Usage
 
 First you'll need to generate (SimpleProxy will generate one if config.yml doesn't exist) or create a config.yml.

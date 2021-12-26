@@ -17,6 +17,7 @@ public class Plugin {
 
     /**
      * You really should not call this method.
+     * @param description plugin description
      */
     public final void init(@NotNull PluginDescriptionFile description) {
         if (this.description != null) throw new RuntimeException("You called init after or inside constructor");

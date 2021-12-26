@@ -51,6 +51,7 @@ public interface EventManager {
     /**
      * Calls an event. This method does nothing if the event manager is not enabled.
      * @param event the event
+     * @param <T> Event type
      * @throws IllegalStateException when an event is fired from wrong thread.
      * @return the fired event
      */

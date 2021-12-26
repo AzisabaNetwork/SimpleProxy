@@ -27,6 +27,7 @@ public interface ProxyServer {
 
     /**
      * Reloads the proxy config and returns the completable future.
+     * @return completable future of reload task
      */
     @NotNull
     CompletableFuture<Void> reloadConfig();

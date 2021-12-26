@@ -24,6 +24,20 @@ public interface PluginLoader {
      */
     void loadPlugins() throws IOException;
 
+    /**
+     * Loads a single plugin.
+     * @param description the description
+     * @param path path to the plugin file
+     * @throws IOException if an input/output error occurs
+     * @throws UnsupportedOperationException if plugin loader is not enabled
+     */
+    void loadPlugin(@NotNull PluginDescriptionFile description, @NotNull Path path) throws IOException;
+
+    /**
+     * Returns loaded plugin by their plugin id.
+     * @param id the id
+     * @return plugin if loaded, null otherwise
+     */
     @Nullable
     Plugin getPlugin(@NotNull String id);
 
@@ -55,5 +69,12 @@ public interface PluginLoader {
      */
     boolean isEnabled();
 
+    /**
+     * Disables a plugin.
+     * @param plugin the plugin to disable
+     */
     void disablePlugin(@NotNull Plugin plugin);
+
+    @Nullable
+    Class<?> findClass(@NotNull String name);
 }

@@ -52,16 +52,16 @@ public class SimpleEventManager implements EventManager {
             }
             Class<?> clazz = method.getParameters()[0].getType();
             if (!Event.class.isAssignableFrom(clazz)) {
-                logInvalidHandler(method, "parameter type is not assignable from " + Event.class.getCanonicalName(), plugin);
+                logInvalidHandler(method, "parameter type is not assignable from " + Event.class.getTypeName(), plugin);
                 continue;
             }
-            boolean isStatic = Modifier.isStatic(method.getModifiers());
-            if (!method.isAccessible()) {
-                logInvalidHandler(method, "method is inaccessible", plugin);
+            if (Modifier.isPublic(method.getModifiers())) {
+                logInvalidHandler(method, "method is not public", plugin);
                 continue;
             }
             Class<? extends Event> eventClass = clazz.asSubclass(Event.class);
             HandlerList handlerList = getHandlerList(eventClass);
+            boolean isStatic = Modifier.isStatic(method.getModifiers());
             ThrowableConsumer<Event> consumer = isStatic ? event -> method.invoke(null, event) : event -> method.invoke(listener, event);
             handlerList.add(consumer, eventHandler.priority(), listener, plugin);
         }

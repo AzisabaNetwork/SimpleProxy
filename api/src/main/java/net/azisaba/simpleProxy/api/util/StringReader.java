@@ -35,6 +35,7 @@ public class StringReader {
 
     /**
      * Reads the next character. Does not update the current index.
+     * @return peeked char
      */
     public char peek() {
         int idx;
@@ -48,6 +49,8 @@ public class StringReader {
 
     /**
      * Reads the next <code>n</code> character. Does not update the current index.
+     * @param amount character count to peek
+     * @return peeked characters
      */
     @NotNull
     public String peek(int amount) {
@@ -61,6 +64,7 @@ public class StringReader {
 
     /**
      * Reads the remaining characters. Does not update the current index.
+     * @return remaining characters
      */
     @NotNull
     public String peekRemaining() {
@@ -126,13 +130,16 @@ public class StringReader {
     /**
      * Checks if the remaining text starts with `prefix`.
      * @param prefix the prefix
+     * @return true if starts with prefix, false otherwise
      */
     public boolean startsWith(String prefix) {
         return peekRemaining().startsWith(prefix);
     }
 
     /**
-     * Updates the current index by `amount`.
+     * Updates the current index by `amount`. Does not perform any checks.
+     * @param amount character count to skip
+     * @return this
      */
     @NotNull
     public StringReader skip(int amount) {
@@ -142,6 +149,7 @@ public class StringReader {
 
     /**
      * Checks if the reader has encountered EOF.
+     * @return true if eof, false otherwise
      */
     public boolean isEOF() {
         return index >= text.length();
