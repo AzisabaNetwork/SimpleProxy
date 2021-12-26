@@ -1,6 +1,8 @@
 package net.azisaba.simpleProxy.api.plugin;
 
 import net.azisaba.simpleProxy.api.ProxyServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -10,6 +12,7 @@ import java.util.Objects;
  * Event listeners are automatically registered for main class.
  */
 public class Plugin {
+    private Logger logger;
     private PluginDescriptionFile description;
 
     /**
@@ -18,7 +21,13 @@ public class Plugin {
     public final void init(@NotNull PluginDescriptionFile description) {
         if (this.description != null) throw new RuntimeException("You called init after or inside constructor");
         this.description = description;
+        this.logger = LogManager.getLogger(description.name);
         getProxy().getEventManager().registerEvents(this, this);
+    }
+
+    @NotNull
+    public Logger getLogger() {
+        return Objects.requireNonNull(logger, "plugin isn't initialized yet");
     }
 
     @NotNull
