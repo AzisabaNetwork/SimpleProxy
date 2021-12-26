@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.handler.codec.haproxy.HAProxyCommand;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
@@ -50,19 +51,23 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
             proxiedProtocol = HAProxyProxiedProtocol.TCP4;
         }
         SocketAddress socketAddress = forwarder.channel.remoteAddress();
-        InetSocketAddress inetSocketAddress;
+        String hostAddress = null;
+        int port = 0;
         if (socketAddress instanceof InetSocketAddress) {
-            inetSocketAddress = (InetSocketAddress) socketAddress;
+            hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
+            port = ((InetSocketAddress) socketAddress).getPort();
+        } else if (socketAddress instanceof DomainSocketAddress) {
+            hostAddress = ((DomainSocketAddress) socketAddress).path();
         } else {
-            throw new RuntimeException("Nope");
+            LOGGER.warn("Unrecognized socket address type {}: {}", socketAddress.getClass().getTypeName(), socketAddress);
         }
         ctx.channel().writeAndFlush(new HAProxyMessage(
                 HAProxyProtocolVersion.V2,
                 HAProxyCommand.PROXY,
                 proxiedProtocol,
-                inetSocketAddress.getAddress().getHostAddress(),
+                hostAddress,
                 serverInfo.getHost(),
-                inetSocketAddress.getPort(),
+                port,
                 serverInfo.getPort()
         ));
     }
