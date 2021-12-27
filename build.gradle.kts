@@ -41,7 +41,7 @@ subprojects {
                 include("**")
                 val tokenReplacementMap = mapOf(
                     "version" to project.version,
-                    "name" to project.name,
+                    "name" to project.parent!!.name,
                 )
                 filter<org.apache.tools.ant.filters.ReplaceTokens>("tokens" to tokenReplacementMap)
             }

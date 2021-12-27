@@ -1,6 +1,7 @@
 package net.azisaba.simpleProxy.api.config;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -20,6 +21,6 @@ public interface ListenerInfo {
     @NotNull
     Protocol getProtocol();
 
-    @NotNull
+    @Nullable
     String getType();
 }

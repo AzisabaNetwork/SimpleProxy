@@ -35,6 +35,7 @@ public class UDPMessageForwarder extends SimpleChannelInboundHandler<DatagramPac
 
     public UDPMessageForwarder(Channel channel, ListenerInfo listenerInfo) {
         if (listenerInfo.getProtocol() == Protocol.TCP) throw new RuntimeException("Not expecting TCP protocol type");
+        LOGGER.warn("UDP protocol may not work as expected, use at your own risk.");
         this.channel = channel;
         this.listenerInfo = listenerInfo;
     }
@@ -54,8 +55,8 @@ public class UDPMessageForwarder extends SimpleChannelInboundHandler<DatagramPac
     @Override
     public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-        deactivated = true;
-        ctx.channel().close();
+        //deactivated = true;
+        //ctx.channel().close();
         for (InetSocketAddress address : remotes.keySet()) {
             dispose(address);
         }
@@ -63,22 +64,56 @@ public class UDPMessageForwarder extends SimpleChannelInboundHandler<DatagramPac
     }
 
     public void writeToRemote(@NotNull Channel ch, DatagramPacket msg) {
-        ch.write(msg);
+        ch.writeAndFlush(msg);
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-        if (deactivated || !channel.isActive()) {
+        if (!channel.isActive()) {
             //ctx.channel().close();
             return;
         }
+        /* // for testing with Minecraft: Bedrock Edition
+        byte id = msg.content().readByte();
+        if (id == 0x01 || id == 0x02) {
+            long time = msg.content().readLong();
+            msg.content().readBytes(16).release();
+            long guid = msg.content().readLong();
+            LOGGER.info("ID: {}, Time: {}, GUID: {}, unread bytes: {}", id, time, guid, msg.content().readableBytes());
+        } else {
+            LOGGER.info("ID: {}, readable bytes: {}", id, msg.content().readableBytes());
+        }
+        msg.content().resetReaderIndex();
+        */
         Channel remote = getRemote(msg.sender());
+        DatagramPacket newPacket = new DatagramPacket(msg.content().duplicate(), (InetSocketAddress) remote.remoteAddress());
         if (!remote.isActive()) {
-            queue.add(msg);
+            queue.add(newPacket);
             return;
         }
         flushQueue(remote);
-        writeToRemote(remote, new DatagramPacket(msg.content(), (InetSocketAddress) remote.remoteAddress()));
+        writeToRemote(remote, newPacket);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        LOGGER.info(msg);
+        super.channelRead(ctx, msg);
+    }
+
+    @Override
+    public boolean acceptInboundMessage(Object msg) throws Exception {
+        return super.acceptInboundMessage(msg);
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        super.channelReadComplete(ctx);
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelUnregistered(ctx);
     }
 
     @NotNull
@@ -134,7 +169,7 @@ public class UDPMessageForwarder extends SimpleChannelInboundHandler<DatagramPac
     public void flushQueue(Channel ch) {
         DatagramPacket msg;
         while ((msg = queue.poll()) != null) {
-            writeToRemote(ch, new DatagramPacket(msg.content(), (InetSocketAddress) ch.remoteAddress()));
+            writeToRemote(ch, msg);
         }
     }
 }

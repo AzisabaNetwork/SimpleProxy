@@ -6,6 +6,7 @@ import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.yaml.YamlConfiguration;
 import net.azisaba.simpleProxy.api.yaml.YamlObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +28,7 @@ public class ListenerInfoImpl implements ListenerInfo {
                             boolean proxyProtocol,
                             int timeout,
                             @NotNull Protocol protocol,
-                            @NotNull String type) {
+                            @Nullable String type) {
         if (listenPort <= 0 || listenPort > 65535) throw new RuntimeException("Port is out of range: " + listenPort);
         Objects.requireNonNull(host, "host cannot be null");
         Objects.requireNonNull(servers, "servers cannot be null");
@@ -50,7 +51,7 @@ public class ListenerInfoImpl implements ListenerInfo {
                 obj.getBoolean("proxyProtocol", false),
                 obj.getInt("timeout", 1000 * 30), // 30 seconds
                 Protocol.valueOf(obj.getString("protocol", "tcp").toUpperCase(Locale.ROOT)),
-                obj.getString("type", "tcp")
+                obj.getString("type")
         );
     }
 
@@ -87,7 +88,7 @@ public class ListenerInfoImpl implements ListenerInfo {
         return protocol;
     }
 
-    @NotNull
+    @Nullable
     @Override
     public String getType() {
         return type;
