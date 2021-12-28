@@ -89,6 +89,7 @@ allprojects {
         publications {
             create<MavenPublication>("mavenJava") {
                 from(components["java"])
+                artifact(tasks.getByName("sourcesJar"))
             }
         }
     }
