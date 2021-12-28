@@ -149,7 +149,7 @@ public class ConnectionListener {
                         if (serverInfo.isProxyProtocol()) {
                             ch.pipeline().addFirst("haproxy_message_encoder", HAProxyMessageEncoder.INSTANCE);
                         }
-                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, forwarder.channel.remoteAddress()).callEvent();
+                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, forwarder.channel, forwarder.channel.remoteAddress()).callEvent();
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
@@ -169,7 +169,7 @@ public class ConnectionListener {
                         if (serverInfo.isProxyProtocol()) {
                             ch.pipeline().addFirst("haproxy_message_encoder", HAProxyMessageEncoder.INSTANCE);
                         }
-                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, address).callEvent();
+                        new RemoteConnectionInitEvent(forwarder.listenerInfo, ch, forwarder.channel, address).callEvent();
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
