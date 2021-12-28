@@ -4,6 +4,13 @@ Very simple TCP reverse proxy
 ## Requirements
 - Java 11 or later
 
+## Controlling SimpleProxy
+
+| Signal    |                                                                                                          |
+|-----------|----------------------------------------------------------------------------------------------------------|
+| TERM, INT | fast shutdown                                                                                            |
+| HUP       | reloads configuration and spawns new listener with new configuration, graceful shutdown of old listeners |
+
 ## Usage
 
 First you'll need to generate (SimpleProxy will generate one if config.yml doesn't exist) or create a config.yml.
