@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ProxyConfig {
+public class ProxyConfigInstance {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<Field> FIELDS = new ArrayList<>();
     private static YamlObject config;
@@ -44,12 +44,12 @@ public class ProxyConfig {
         if (listeners != null) {
             listeners.<Map<String, Object>>forEachAsType(obj -> {
                 if (obj == null) return;
-                ProxyConfig.listeners.add(new ListenerInfoImpl(new YamlObject(obj)));
+                ProxyConfigInstance.listeners.add(new ListenerInfoImpl(new YamlObject(obj)));
             });
         }
         YamlArray rules = config.getArray("rules");
         if (rules != null) {
-            ProxyConfig.rules.read(rules);
+            ProxyConfigInstance.rules.read(rules);
         }
         if (shouldSave) save();
     }
@@ -101,7 +101,7 @@ public class ProxyConfig {
     }
 
     static {
-        for (Field field : ProxyConfig.class.getFields()) {
+        for (Field field : ProxyConfigInstance.class.getFields()) {
             if (!Modifier.isPublic(field.getModifiers())) continue;
             if (!Modifier.isStatic(field.getModifiers())) continue;
             if (field.isSynthetic()) continue;

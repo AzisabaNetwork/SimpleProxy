@@ -11,7 +11,7 @@ import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +87,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
             ctx.channel().close();
             return;
         }
-        if (ProxyConfig.debug && msg instanceof ByteBuf) {
+        if (ProxyConfigInstance.debug && msg instanceof ByteBuf) {
             LOGGER.debug("< IN: " + ((ByteBuf) msg).readableBytes());
         }
         forwarder.channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {

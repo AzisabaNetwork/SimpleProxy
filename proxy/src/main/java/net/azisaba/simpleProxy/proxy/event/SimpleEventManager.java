@@ -8,7 +8,7 @@ import net.azisaba.simpleProxy.api.event.EventPriority;
 import net.azisaba.simpleProxy.api.event.HandlerList;
 import net.azisaba.simpleProxy.api.plugin.Plugin;
 import net.azisaba.simpleProxy.api.util.ThrowableConsumer;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
@@ -122,6 +122,6 @@ public class SimpleEventManager implements EventManager {
 
     @Override
     public boolean isEnabled() {
-        return !ProxyConfig.disablePlugins;
+        return !ProxyConfigInstance.disablePlugins;
     }
 }

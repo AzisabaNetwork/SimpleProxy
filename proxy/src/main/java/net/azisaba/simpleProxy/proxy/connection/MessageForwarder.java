@@ -8,7 +8,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     }
 
     public void writeToRemote(Object msg) {
-        if (ProxyConfig.debug && msg instanceof ByteBuf) {
+        if (ProxyConfigInstance.debug && msg instanceof ByteBuf) {
             LOGGER.debug("> OUT: " + ((ByteBuf) msg).readableBytes());
         }
         remote.writeAndFlush(msg);

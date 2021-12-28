@@ -1,6 +1,7 @@
 package net.azisaba.simpleProxy.api;
 
 import net.azisaba.simpleProxy.api.command.CommandManager;
+import net.azisaba.simpleProxy.api.config.ProxyConfig;
 import net.azisaba.simpleProxy.api.event.EventManager;
 import net.azisaba.simpleProxy.api.plugin.loader.PluginLoader;
 import net.azisaba.simpleProxy.api.util.ProxyVersion;
@@ -52,4 +53,16 @@ public interface ProxyServer {
      */
     @NotNull
     PluginLoader getPluginLoader();
+
+    /**
+     * Returns the proxy config.
+     * @return proxy config
+     */
+    @NotNull
+    ProxyConfig getConfig();
+
+    /**
+     * Closes all active connections and shutdown the proxy server.
+     */
+    void stop();
 }

@@ -3,7 +3,7 @@ package net.azisaba.simpleProxy.proxy.connection;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import net.azisaba.simpleProxy.proxy.config.RuleCheckResult;
 import net.azisaba.simpleProxy.proxy.config.RuleType;
 import org.apache.logging.log4j.LogManager;
@@ -25,19 +25,19 @@ public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         if (!(socketAddress instanceof InetSocketAddress)) return;
         String hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
-        RuleType ruleType = ProxyConfig.rules.getEffectiveRuleType(hostAddress);
+        RuleType ruleType = ProxyConfigInstance.rules.getEffectiveRuleType(hostAddress);
         if (ruleType == RuleType.DENY) {
-            if (ProxyConfig.debug) {
-                RuleCheckResult result = ProxyConfig.rules.getEffectiveRuleResult(hostAddress);
+            if (ProxyConfigInstance.debug) {
+                RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(hostAddress);
                 LOGGER.info("Denied connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
-            } else if (ProxyConfig.verbose) {
+            } else if (ProxyConfigInstance.verbose) {
                 LOGGER.info("Denied connection from {}", ctx.channel().remoteAddress());
             }
             ctx.channel().close();
             return;
         } else if (ruleType == RuleType.ALLOW) {
-            if (ProxyConfig.debug) {
-                RuleCheckResult result = ProxyConfig.rules.getEffectiveRuleResult(hostAddress);
+            if (ProxyConfigInstance.debug) {
+                RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(hostAddress);
                 LOGGER.info("Allowed connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
             }
         }

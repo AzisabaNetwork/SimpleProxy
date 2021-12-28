@@ -5,16 +5,12 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyMessageEncoder;
@@ -24,7 +20,7 @@ import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.connection.ConnectionInitEvent;
 import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionInitEvent;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +44,7 @@ public class ConnectionListener {
     public final List<ChannelFuture> futures = new ArrayList<>();
 
     public ConnectionListener() {
-        if (ProxyConfig.isEpoll()) {
+        if (ProxyConfigInstance.isEpoll()) {
             bossGroup = new EpollEventLoopGroup(r -> {
                 Thread t = new Thread(r);
                 t.setName("Netty Epoll IO Server Boss Thread #" + BOSS_THREAD_COUNT.incrementAndGet());

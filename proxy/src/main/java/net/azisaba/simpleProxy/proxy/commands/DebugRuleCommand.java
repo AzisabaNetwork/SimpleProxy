@@ -1,6 +1,6 @@
 package net.azisaba.simpleProxy.proxy.commands;
 
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import net.azisaba.simpleProxy.proxy.config.RuleCheckResult;
 import net.azisaba.simpleProxy.proxy.config.RuleType;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
@@ -22,7 +22,7 @@ public class DebugRuleCommand implements CommandHandler {
             return;
         }
         String address = args.get(0);
-        RuleCheckResult result = ProxyConfig.rules.getEffectiveRuleResult(address);
+        RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(address);
         LOGGER.info(Util.ANSI_CYAN + "Check result for {}:" + Util.ANSI_RESET, address);
         String resultColor;
         if (result.getRuleType() == RuleType.ALLOW) {

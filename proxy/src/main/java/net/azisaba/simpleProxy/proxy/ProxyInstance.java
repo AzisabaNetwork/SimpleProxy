@@ -2,6 +2,7 @@ package net.azisaba.simpleProxy.proxy;
 
 import net.azisaba.simpleProxy.api.ProxyServer;
 import net.azisaba.simpleProxy.api.ProxyServerHolder;
+import net.azisaba.simpleProxy.api.config.ProxyConfig;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyInitializeEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyReloadEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent;
@@ -10,7 +11,8 @@ import net.azisaba.simpleProxy.proxy.commands.HelpCommand;
 import net.azisaba.simpleProxy.proxy.commands.ReloadCommand;
 import net.azisaba.simpleProxy.proxy.commands.StopCommand;
 import net.azisaba.simpleProxy.proxy.config.ListenerInfoImpl;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigImpl;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import net.azisaba.simpleProxy.proxy.connection.ConnectionListener;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
 import net.azisaba.simpleProxy.api.command.InvalidArgumentException;
@@ -52,6 +54,7 @@ public class ProxyInstance implements ProxyServer {
     private final SimpleCommandManager commandManager = new SimpleCommandManager();
     private final SimpleEventManager eventManager = new SimpleEventManager();
     private final SimplePluginLoader pluginLoader = new SimplePluginLoader();
+    private final ProxyConfig proxyConfig = new ProxyConfigImpl();
     private ConnectionListener connectionListener;
     private boolean stopping = false;
 
@@ -167,14 +170,14 @@ public class ProxyInstance implements ProxyServer {
             closeListeners();
             LOGGER.info("Loading config");
             try {
-                ProxyConfig.init();
+                ProxyConfigInstance.init();
             } catch (IOException | InvalidArgumentException e) {
                 LOGGER.fatal("Could not load proxy configuration", e);
                 throw new RuntimeException(e);
             }
             if (!pluginLoader.isEnabled()) LOGGER.info("Plugin loader is disabled");
             if (!eventManager.isEnabled()) LOGGER.info("Event manager is disabled");
-            List<ListenerInfoImpl> listeners = ProxyConfig.getValidListeners();
+            List<ListenerInfoImpl> listeners = ProxyConfigInstance.getValidListeners();
             if (listeners.isEmpty()) {
                 LOGGER.warn("No valid listeners defined");
             }
@@ -211,6 +214,12 @@ public class ProxyInstance implements ProxyServer {
         return pluginLoader;
     }
 
+    @NotNull
+    @Override
+    public ProxyConfig getConfig() {
+        return proxyConfig;
+    }
+
     public void closeListeners() {
         if (connectionListener != null) {
             LOGGER.info("Closing listeners");
@@ -226,6 +235,7 @@ public class ProxyInstance implements ProxyServer {
         }
     }
 
+    @Override
     public void stop() {
         if (stopping) return;
         stopping = true;

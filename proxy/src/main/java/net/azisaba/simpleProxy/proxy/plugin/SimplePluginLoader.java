@@ -7,7 +7,7 @@ import net.azisaba.simpleProxy.api.plugin.loader.PluginLoader;
 import net.azisaba.simpleProxy.api.yaml.YamlConfiguration;
 import net.azisaba.simpleProxy.api.yaml.YamlObject;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
-import net.azisaba.simpleProxy.proxy.config.ProxyConfig;
+import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -190,7 +190,7 @@ public class SimplePluginLoader implements PluginLoader {
 
     @Override
     public boolean isEnabled() {
-        return !ProxyConfig.disablePlugins;
+        return !ProxyConfigInstance.disablePlugins;
     }
 
     @Override
