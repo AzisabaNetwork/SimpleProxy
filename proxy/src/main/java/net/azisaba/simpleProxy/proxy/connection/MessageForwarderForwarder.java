@@ -82,7 +82,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) {
+    public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
         if (forwarder.deactivated || !ctx.channel().isActive()) {
             ctx.channel().close();
             return;
@@ -90,13 +90,18 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         if (ProxyConfigInstance.debug && msg instanceof ByteBuf) {
             LOGGER.debug("< IN: " + ((ByteBuf) msg).readableBytes());
         }
-        forwarder.channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
+        Object write = msg;
+        if (write instanceof ByteBuf) {
+            write = ((ByteBuf) write).copy();
+        }
+        forwarder.channel.writeAndFlush(write).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 ctx.channel().read();
             } else {
                 future.channel().close();
             }
         });
+        super.channelRead(ctx, msg);
     }
 
     @Override

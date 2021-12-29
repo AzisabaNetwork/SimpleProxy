@@ -64,17 +64,28 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) {
+    public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
         if (deactivated || !channel.isActive()) {
             ctx.channel().close();
+            super.channelRead(ctx, msg);
             return;
         }
         if (remote == null || !remote.isActive()) {
-            queue.add(msg);
+            if (msg instanceof ByteBuf) {
+                queue.add(((ByteBuf) msg).copy());
+            } else {
+                queue.add(msg);
+            }
+            super.channelRead(ctx, msg);
             return;
         }
         flushQueue();
-        writeToRemote(msg);
+        if (msg instanceof ByteBuf) {
+            writeToRemote(((ByteBuf) msg).copy());
+        } else {
+            writeToRemote(msg);
+        }
+        super.channelRead(ctx, msg);
     }
 
     @Override
