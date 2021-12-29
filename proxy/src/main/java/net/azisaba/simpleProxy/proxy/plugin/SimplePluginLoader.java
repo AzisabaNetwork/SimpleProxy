@@ -204,6 +204,13 @@ public class SimplePluginLoader implements PluginLoader {
     public Class<?> findClass(@NotNull String name) {
         Class<?> result = classes.get(name);
         if (result != null) return result;
+        try {
+            result = ClassLoader.getSystemClassLoader().loadClass(name);
+        } catch (ClassNotFoundException ignore) {}
+        if (result != null) {
+            setClass(name, result);
+            return result;
+        }
         for (PluginClassLoader loader : loaders) {
             try {
                 result = loader.findClass(name, false);
