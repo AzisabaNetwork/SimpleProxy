@@ -5,6 +5,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -24,7 +26,6 @@ import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -40,8 +41,7 @@ public class ConnectionListener {
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final EventLoopGroup clientWorkerGroup;
-    @VisibleForTesting
-    public final List<ChannelFuture> futures = new ArrayList<>();
+    private final List<ChannelFuture> futures = new ArrayList<>();
 
     public ConnectionListener() {
         if (ProxyConfigInstance.isEpoll()) {
@@ -169,8 +169,19 @@ public class ConnectionListener {
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
+        registerFutureUnregisterHandler(future);
         futures.add(future);
         return future;
+    }
+
+    private void registerFutureUnregisterHandler(ChannelFuture future) {
+        future.channel().pipeline().addFirst(new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
+                futures.remove(future);
+                super.channelInactive(ctx);
+            }
+        });
     }
 
     public void closeFutures() {
@@ -183,6 +194,7 @@ public class ConnectionListener {
 
     public void close() {
         closeFutures();
+        LOGGER.info("Shutting down event loop");
         clientWorkerGroup.shutdownGracefully().syncUninterruptibly();
         workerGroup.shutdownGracefully().syncUninterruptibly();
         bossGroup.shutdownGracefully().syncUninterruptibly();
