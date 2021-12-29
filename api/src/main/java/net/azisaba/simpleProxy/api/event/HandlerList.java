@@ -27,21 +27,21 @@ public class HandlerList {
         listeners.add(new RegisteredListener(consumer, priority, listener, plugin));
     }
 
-    public void remove(@NotNull Plugin mod) {
-        Objects.requireNonNull(mod);
+    public void remove(@NotNull Plugin plugin) {
+        Objects.requireNonNull(plugin);
         List<RegisteredListener> toRemove = new ArrayList<>();
         listeners.forEach(registeredListener -> {
-            if (mod.equals(registeredListener.getPlugin())) {
+            if (plugin.equals(registeredListener.getPlugin())) {
                 toRemove.add(registeredListener);
             }
         });
         toRemove.forEach(listeners::remove);
     }
 
-    public boolean anyContains(@NotNull Plugin mod) {
-        Objects.requireNonNull(mod);
+    public boolean anyContains(@NotNull Plugin plugin) {
+        Objects.requireNonNull(plugin);
         for (RegisteredListener listener : listeners) {
-            if (mod.equals(listener.getPlugin())) return true;
+            if (plugin.equals(listener.getPlugin())) return true;
         }
         return false;
     }
@@ -76,7 +76,7 @@ public class HandlerList {
                     } catch (Throwable e) {
                         Throwable cause = e.getCause() != null ? e.getCause() : e;
                         String listenerName = registeredListener.getListener() == null ? null : registeredListener.getListener().getClass().getTypeName();
-                        LOGGER.error("", new EventException("Could not pass event " + event.getEventTypeName() + " to listener " + listenerName + " of mod " + registeredListener.getPlugin().getName(), cause));
+                        LOGGER.error("", new EventException("Could not pass event " + event.getEventTypeName() + " to listener " + listenerName + " of plugin " + registeredListener.getPlugin().getName(), cause));
                     }
                 });
     }

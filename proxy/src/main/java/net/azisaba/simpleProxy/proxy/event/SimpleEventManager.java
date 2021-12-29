@@ -28,7 +28,7 @@ public class SimpleEventManager implements EventManager {
     private static final ConcurrentHashMap<Class<? extends Event>, HandlerList> handlerMap = new ConcurrentHashMap<>();
 
     private void logInvalidHandler(Method method, String message, Plugin plugin) {
-        LOGGER.warn("Invalid EventHandler: {} at {} in mod {}", message, method.toGenericString(), plugin.getId());
+        LOGGER.warn("Invalid EventHandler: {} at {} in plugin {}", message, method.toGenericString(), plugin.getId());
     }
 
     @Override
@@ -75,7 +75,7 @@ public class SimpleEventManager implements EventManager {
 
     @Override
     public void unregisterEvents(@NotNull Plugin plugin) {
-        Objects.requireNonNull(plugin, "mod cannot be null");
+        Objects.requireNonNull(plugin, "plugin cannot be null");
         handlerMap.values().forEach(handlerList -> handlerList.remove(plugin));
     }
 
