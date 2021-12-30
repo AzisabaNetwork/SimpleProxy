@@ -77,7 +77,9 @@ public class YamlArray extends ArrayList<Object> implements YamlMember {
     @SuppressWarnings("unchecked")
     public @NotNull <F, T> List<T> mapAsType(@NotNull Function<F, T> function) {
         List<T> newList = new ArrayList<>();
-        this.forEach(v -> newList.add(function.apply((F) v)));
+        if (!this.isEmpty()) {
+            this.forEach(v -> newList.add(function.apply((F) v)));
+        }
         return newList;
     }
 

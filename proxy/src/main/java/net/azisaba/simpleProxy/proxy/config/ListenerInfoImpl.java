@@ -3,8 +3,10 @@ package net.azisaba.simpleProxy.proxy.config;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
+import net.azisaba.simpleProxy.api.yaml.YamlArray;
 import net.azisaba.simpleProxy.api.yaml.YamlConfiguration;
 import net.azisaba.simpleProxy.api.yaml.YamlObject;
+import net.azisaba.simpleProxy.proxy.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +47,7 @@ public class ListenerInfoImpl implements ListenerInfo {
         this(
                 obj.getString("host", "0.0.0.0"),
                 obj.getInt("listenPort"),
-                Objects.requireNonNull(obj.getArray("servers")).<Map<String, Object>, ServerInfo>mapAsType(map ->
+                Util.getOrGet(() -> obj.getArray("servers"), YamlArray::new).<Map<String, Object>, ServerInfo>mapAsType(map ->
                         new ServerInfoImpl(new YamlObject(YamlConfiguration.DEFAULT, map))
                 ),
                 obj.getBoolean("proxyProtocol", false),

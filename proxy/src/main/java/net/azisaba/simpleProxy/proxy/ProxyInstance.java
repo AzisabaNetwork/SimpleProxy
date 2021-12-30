@@ -177,9 +177,9 @@ public class ProxyInstance implements ProxyServer {
             }
             if (!pluginLoader.isEnabled()) LOGGER.info("Plugin loader is disabled");
             if (!eventManager.isEnabled()) LOGGER.info("Event manager is disabled");
-            List<ListenerInfoImpl> listeners = ProxyConfigInstance.getValidListeners();
+            List<ListenerInfoImpl> listeners = ProxyConfigInstance.listeners;
             if (listeners.isEmpty()) {
-                LOGGER.warn("No valid listeners defined");
+                LOGGER.warn("No listeners defined");
             }
             LOGGER.info("Initializing listeners");
             if (connectionListener == null) {

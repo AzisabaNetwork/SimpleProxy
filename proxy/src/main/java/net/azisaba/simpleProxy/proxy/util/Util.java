@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 public class Util {
     public static final String ANSI_RESET = "\u001B[0m";
@@ -34,5 +35,11 @@ public class Util {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < times; i++) result.append(s);
         return result.toString();
+    }
+
+    public static <T> T getOrGet(Supplier<T> valueSupplier, Supplier<T> defSupplier) {
+        T value = valueSupplier.get();
+        if (value == null) return defSupplier.get();
+        return value;
     }
 }

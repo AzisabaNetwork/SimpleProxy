@@ -13,6 +13,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyMessageEncoder;
@@ -22,6 +23,7 @@ import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.connection.ConnectionInitEvent;
 import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionInitEvent;
+import net.azisaba.simpleProxy.proxy.builtin.BuiltinTypeHandler;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,11 +84,9 @@ public class ConnectionListener {
     }
 
     public void listen(@NotNull ListenerInfo listenerInfo) {
-        if (listenerInfo.getServers().isEmpty()) {
-            LOGGER.warn("Listener for " + listenerInfo.getListenPort() + " has empty forwardTo list, skipping");
-            return;
-        }
         ChannelInitializer<Channel> channelInitializer = new ChannelInitializer<Channel>() {
+            private boolean warningMessageShown = false;
+
             @Override
             protected void initChannel(@NotNull Channel ch) {
                 try {
@@ -101,7 +101,13 @@ public class ConnectionListener {
                 if (listenerInfo.isProxyProtocol()) {
                     ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());
                 }
-                ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo));
+                if (!listenerInfo.getServers().isEmpty()) {
+                    ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo));
+                } else if (!warningMessageShown) {
+                    LOGGER.warn("Not adding message forwarder because listener for " + listenerInfo.getListenPort() + " has empty servers list");
+                    warningMessageShown = true;
+                }
+                BuiltinTypeHandler.onConnectionInit(listenerInfo.getType(), ch);
                 new ConnectionInitEvent(listenerInfo, ch).callEvent();
             }
         };
@@ -115,13 +121,30 @@ public class ConnectionListener {
                     .syncUninterruptibly();
         } else {
             // UDP
-            future = new Bootstrap().group(workerGroup)
-                    .channel(listenerInfo.getProtocol().serverChannelType)
-                    .option(ChannelOption.SO_BROADCAST, true)
-                    .option(ChannelOption.AUTO_READ, true)
-                    .handler(new UDPMessageForwarder(null, listenerInfo))
-                    .bind(listenerInfo.getListenPort())
-                    .syncUninterruptibly();
+            if (listenerInfo.getServers().isEmpty()) {
+                LOGGER.warn("Not adding message forwarder because listener for " + listenerInfo.getListenPort() + " has empty servers list");
+                future = new Bootstrap().group(workerGroup)
+                        .channel(listenerInfo.getProtocol().serverChannelType)
+                        .option(ChannelOption.SO_BROADCAST, true)
+                        .option(ChannelOption.AUTO_READ, true)
+                        .handler(new ChannelInitializer<DatagramChannel>() {
+                            @Override
+                            protected void initChannel(@NotNull DatagramChannel ch) {
+                                BuiltinTypeHandler.onConnectionInit(listenerInfo.getType(), ch);
+                                new ConnectionInitEvent(listenerInfo, ch).callEvent();
+                            }
+                        })
+                        .bind(listenerInfo.getListenPort())
+                        .syncUninterruptibly();
+            } else {
+                future = new Bootstrap().group(workerGroup)
+                        .channel(listenerInfo.getProtocol().serverChannelType)
+                        .option(ChannelOption.SO_BROADCAST, true)
+                        .option(ChannelOption.AUTO_READ, true)
+                        .handler(new UDPMessageForwarder(null, listenerInfo))
+                        .bind(listenerInfo.getListenPort())
+                        .syncUninterruptibly();
+            }
         }
         if (listenerInfo.isProxyProtocol()) {
             LOGGER.warn("Proxy protocol enabled for listener {}, please ensure this listener is properly firewalled.", future.channel().toString());

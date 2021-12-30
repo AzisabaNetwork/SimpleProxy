@@ -22,7 +22,7 @@ listeners:
 - listenPort: 25565 # port number to listen at
   host: 0.0.0.0 # default: 0.0.0.0
   protocol: tcp # tcp or udp (default: tcp)
-  type: null # has no implementation in SimpleProxy. may be used by plugins. (default: <null>)
+  type: null # may be used by plugins (default: <null>)
   proxyProtocol: true # optional (default: false): whether the proxy protocol should be enabled for this listener
   timeout: 3000 # custom timeout duration in milliseconds (default: 30000 = 30 seconds)
   # ^ don't use 3 seconds as timeout in production because it is (probably) too short
@@ -60,3 +60,8 @@ rules:
   - deny from ::/0
   - deny from 0.0.0.0/0
 ```
+
+## Built-in `type`s
+
+- `echo`: This type disables proxy functionality and echos input.
+- `echo-time`: This type disables proxy functionality and sends the output of `System.currentTimeMillis()` (long).
