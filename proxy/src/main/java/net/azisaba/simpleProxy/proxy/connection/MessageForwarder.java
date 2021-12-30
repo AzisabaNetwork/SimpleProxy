@@ -26,6 +26,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     protected final Queue<Object> queue = new ArrayDeque<>();
     protected Channel channel;
     protected Channel remote = null;
+    protected boolean remoteConnecting = false;
     boolean deactivated = false;
     boolean isRemoteActive = false;
 
@@ -37,14 +38,10 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(@NotNull ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        List<ServerInfo> list = new ArrayList<>(listenerInfo.getServers());
-        Collections.shuffle(list);
-        ChannelFuture future = ProxyInstance.getInstance()
-                .getConnectionListener()
-                .connect(this, list.get(0));
         ctx.read();
-        remote = future.channel();
-        LOGGER.info("Forwarder: Established connection: " + ctx.channel());
+        if (ProxyConfigInstance.verbose) {
+            LOGGER.info("Forwarder: Established connection: " + ctx.channel());
+        }
     }
 
     @Override
@@ -53,7 +50,9 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         deactivated = true;
         ctx.channel().close();
         if (remote != null) remote.close();
-        LOGGER.info("Forwarder: Closed connection: " + ctx.channel());
+        if (ProxyConfigInstance.verbose) {
+            LOGGER.info("Forwarder: Closed connection: " + ctx.channel());
+        }
     }
 
     public void writeToRemote(Object msg) {
@@ -69,6 +68,15 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
             ctx.channel().close();
             super.channelRead(ctx, msg);
             return;
+        }
+        if (remote == null && !remoteConnecting) {
+            remoteConnecting = true;
+            List<ServerInfo> list = new ArrayList<>(listenerInfo.getServers());
+            Collections.shuffle(list);
+            ChannelFuture future = ProxyInstance.getInstance()
+                    .getConnectionListener()
+                    .connect(this, list.get(0));
+            remote = future.channel();
         }
         if (remote == null || !remote.isActive()) {
             if (msg instanceof ByteBuf) {
