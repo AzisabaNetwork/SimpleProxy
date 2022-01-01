@@ -98,7 +98,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        LOGGER.warn("Caught exception!", cause);
+        LOGGER.warn("Caught exception in {}!", ctx.channel(), cause);
         ctx.channel().close();
     }
 

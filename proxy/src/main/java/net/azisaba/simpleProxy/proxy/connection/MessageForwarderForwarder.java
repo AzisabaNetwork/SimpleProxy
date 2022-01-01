@@ -108,6 +108,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
         forwarder.deactivated = true;
+        forwarder.channel.close();
         ctx.channel().close();
         LOGGER.info("Remote: Closed connection: " + ctx.channel());
     }
