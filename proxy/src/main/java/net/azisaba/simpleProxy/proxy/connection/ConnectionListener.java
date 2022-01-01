@@ -155,7 +155,7 @@ public class ConnectionListener {
 
     @NotNull
     public ChannelFuture connect(@NotNull MessageForwarder forwarder, @NotNull ServerInfo serverInfo) {
-        ChannelFuture future = new Bootstrap()
+        return new Bootstrap()
                 .group(clientWorkerGroup)
                 .channel(forwarder.listenerInfo.getProtocol().channelType)
                 .handler(new ChannelInitializer<SocketChannel>() {
@@ -172,13 +172,11 @@ public class ConnectionListener {
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
-        futures.add(future);
-        return future;
     }
 
     @NotNull
     public ChannelFuture connect(@NotNull UDPMessageForwarder forwarder, @NotNull InetSocketAddress address, @NotNull ServerInfo serverInfo) {
-        ChannelFuture future = new Bootstrap()
+        return new Bootstrap()
                 .group(clientWorkerGroup)
                 .channel(forwarder.listenerInfo.getProtocol().channelType)
                 .handler(new ChannelInitializer<Channel>() {
@@ -192,25 +190,14 @@ public class ConnectionListener {
                     }
                 })
                 .connect(serverInfo.getHost(), serverInfo.getPort());
-        registerFutureUnregisterHandler(future);
-        futures.add(future);
-        return future;
-    }
-
-    private void registerFutureUnregisterHandler(ChannelFuture future) {
-        future.channel().pipeline().addFirst(new ChannelInboundHandlerAdapter() {
-            @Override
-            public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
-                futures.remove(future);
-                super.channelInactive(ctx);
-            }
-        });
     }
 
     public void closeFutures() {
         for (ChannelFuture future : futures) {
-            LOGGER.info("Closing listener: {}", future.channel().toString());
-            future.channel().close().syncUninterruptibly();
+            if (future.channel().isActive() || future.channel().isOpen()) {
+                LOGGER.info("Closing future/listener: {}", future.channel().toString());
+                future.channel().close().syncUninterruptibly();
+            }
         }
         futures.clear();
     }
