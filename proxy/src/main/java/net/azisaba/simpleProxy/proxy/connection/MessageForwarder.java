@@ -39,7 +39,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     public void channelActive(@NotNull ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         ctx.read();
-        if (ProxyConfigInstance.verbose) {
+        if (ProxyConfigInstance.debug) {
             LOGGER.info("Forwarder: Established connection: " + ctx.channel());
         }
     }
@@ -50,7 +50,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         deactivated = true;
         ctx.channel().close();
         if (remote != null) remote.close();
-        if (ProxyConfigInstance.verbose) {
+        if (ProxyConfigInstance.debug) {
             LOGGER.info("Forwarder: Closed connection: " + ctx.channel());
         }
     }

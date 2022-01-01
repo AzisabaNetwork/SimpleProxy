@@ -41,7 +41,9 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         }
         ctx.read();
         forwarder.remoteActive();
-        LOGGER.info("Remote: Established connection: " + ctx.channel());
+        if (ProxyConfigInstance.debug) {
+            LOGGER.info("Remote: Established connection: " + ctx.channel());
+        }
     }
 
     public void initHAProxy(@NotNull ChannelHandlerContext ctx) throws UnknownHostException {
@@ -110,7 +112,9 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         forwarder.deactivated = true;
         forwarder.channel.close();
         ctx.channel().close();
-        LOGGER.info("Remote: Closed connection: " + ctx.channel());
+        if (ProxyConfigInstance.debug) {
+            LOGGER.info("Remote: Closed connection: " + ctx.channel());
+        }
     }
 
     @Override
