@@ -5,6 +5,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
@@ -13,6 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,12 +30,17 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     protected Channel channel;
     protected Channel remote = null;
     protected boolean remoteConnecting = false;
+    /**
+     * The address which the user is connecting from.
+     */
+    protected SocketAddress sourceAddress;
     boolean deactivated = false;
     boolean isRemoteActive = false;
 
     public MessageForwarder(Channel channel, ListenerInfo listenerInfo) {
         this.channel = channel;
         this.listenerInfo = listenerInfo;
+        this.sourceAddress = channel.remoteAddress();
     }
 
     @Override
@@ -64,6 +72,13 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
+        if (msg instanceof HAProxyMessage) {
+            String sourceAddress = ((HAProxyMessage) msg).sourceAddress();
+            if (sourceAddress != null) {
+                int port = ((HAProxyMessage) msg).sourcePort();
+                this.sourceAddress = new InetSocketAddress(sourceAddress, port);
+            }
+        }
         if (deactivated || !channel.isActive()) {
             ctx.channel().close();
             super.channelRead(ctx, msg);

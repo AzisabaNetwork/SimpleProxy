@@ -61,7 +61,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
                 proxiedProtocol = HAProxyProxiedProtocol.UDP4;
             }
         }
-        SocketAddress socketAddress = forwarder.channel.remoteAddress();
+        SocketAddress socketAddress = forwarder.sourceAddress;
         String hostAddress = null;
         int port = 0;
         if (socketAddress instanceof InetSocketAddress) {
