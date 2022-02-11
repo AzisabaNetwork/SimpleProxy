@@ -5,7 +5,7 @@ dependencies {
     api("org.apache.logging.log4j:log4j-core:$log4jVersion")
     api("org.apache.logging.log4j:log4j-slf4j18-impl:$log4jVersion")
     api("org.slf4j:slf4j-api:1.8.0-beta4")
-    api("it.unimi.dsi:fastutil:8.5.7")
+    api("it.unimi.dsi:fastutil:8.5.8")
 }
 
 tasks {
