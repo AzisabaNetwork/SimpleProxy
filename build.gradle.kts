@@ -10,6 +10,10 @@ version = "1.0.0"
 
 extra.set("log4jVersion", "2.17.2")
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
+
 subprojects {
     apply {
         plugin("java")
