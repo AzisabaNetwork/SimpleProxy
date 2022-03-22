@@ -59,8 +59,8 @@ public class ProxyInstance implements ProxyServer {
     private boolean stopping = false;
 
     public ProxyInstance() {
-        instance = this;
         ProxyServerHolder.setProxyServer(this);
+        instance = this;
     }
 
     @NotNull
