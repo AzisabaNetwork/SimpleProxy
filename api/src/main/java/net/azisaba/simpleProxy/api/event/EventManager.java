@@ -14,8 +14,7 @@ public interface EventManager {
      * Register a listener. To qualify a method for listener, the method would need to meet all these requirements:
      * <ul>
      *     <li>Parameter count is 1</li>
-     *     <li>Parameter #1 is a event (like PlayerBlockBreakEvent)</li>
-     *     <li>Event class must have a {@link Event valid getHandlerList() method} and public modifier</li>
+     *     <li>Parameter #1 is a event (like ProxyInitializeEvent)</li>
      *     <li>Method is accessible from EventManager (usually method should be <code>public</code>)</li>
      *     <li>Must not be abstract</li>
      *     <li>Return type should be void (return value isn't used for now)</li>

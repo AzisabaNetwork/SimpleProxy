@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 /**
- * Represents a plugin. All main class of plugin <strong>must</strong> <code>extends</code> this class.
+ * Represents a plugin. All main class of plugin <strong>must</strong> override (<code>extends</code>) this class.
  * Event listeners are automatically registered for main class.
  */
 public class Plugin {
@@ -18,7 +18,10 @@ public class Plugin {
     /**
      * You really should not call this method.
      * @param description plugin description
+     * @deprecated internal method
      */
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
     public final void init(@NotNull PluginDescriptionFile description) {
         if (this.description != null) throw new RuntimeException("You called init after or inside constructor");
         this.description = description;

@@ -60,12 +60,16 @@ public class SimplePluginLoader implements PluginLoader {
 
     @Override
     public void loadPlugins() throws IOException {
+        // check if plugin loader is enabled (user might have disabled via config)
         if (!isEnabled()) throw new UnsupportedOperationException("Plugin loader is not enabled");
+
+        // look for plugins in the plugins folder
         try (Stream<Path> stream = Files.walk(pluginsDir, FileVisitOption.FOLLOW_LINKS)) {
             stream.forEach(path -> {
                 if (!Files.isRegularFile(path)) return;
                 if (!path.getFileName().toString().endsWith(".jar")) return;
                 try {
+                    // preload plugin
                     PluginDescriptionFile description;
                     try (PluginFile pluginFile = new PluginFile(path.toFile())) {
                         description = loadPluginDescriptionFile(pluginFile);
@@ -76,7 +80,9 @@ public class SimplePluginLoader implements PluginLoader {
                 }
             });
         }
-        for (PluginPreloadData data : new ArrayList<>(preloadData.values())) {
+
+        // load plugins
+        for (PluginPreloadData data : new ArrayList<>(preloadData.values())) { // create new ArrayList to avoid ConcurrentModificationException
             try {
                 loadPlugin(data.description, data.path);
             } catch (Throwable e) {
@@ -86,44 +92,66 @@ public class SimplePluginLoader implements PluginLoader {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void loadPlugin(@NotNull PluginDescriptionFile description, @NotNull Path path) throws IOException {
+        // check if plugin loader is enabled (user might have disabled via config)
         if (!isEnabled()) throw new UnsupportedOperationException("Plugin loader is not enabled");
+
+        // don't load plugin if loaded already
         if (id2PluginMap.containsKey(description.id)) return; // already loaded
+
+        // check for dependencies
         List<String> missingDependencies = new ArrayList<>();
         for (String depend : description.depends) {
+            // plugins cannot depend on itself
             if (description.id.equals(depend)) throw new RuntimeException("Depends on itself");
+            // look for preloaded data
             PluginPreloadData data = preloadData.get(depend);
+            // data is null if plugin was not preloaded
             if (data == null) missingDependencies.add(depend);
         }
+        // throw exception if required dependency is missing
         if (!missingDependencies.isEmpty()) {
             String joined = String.join(", ", missingDependencies);
             throw new RuntimeException("Missing required dependencies: " + joined);
         }
+        // load required dependencies
         for (String depend : description.depends) {
             PluginPreloadData data = preloadData.get(depend);
             try {
+                // try to load plugin (recursively)
+                // TODO: try to detect circular dependency
                 loadPlugin(data.description, data.path);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to load plugin " + data.description.id, e);
             }
         }
+        // load soft dependencies
         for (String depend : description.softDepend) {
+            // plugins cannot depend on itself
             if (description.id.equals(depend)) throw new RuntimeException("Depends on itself");
             PluginPreloadData data = preloadData.get(depend);
+            // data is null if plugin was not preloaded
             if (data == null) {
                 LOGGER.debug("Optional dependency {} of {} is missing", depend, description.id);
                 continue;
             }
             try {
+                // try to load plugin (recursively)
+                // TODO: try to detect circular dependency
                 loadPlugin(data.description, data.path);
             } catch (Exception e) {
+                // note that this does not throw exception, because this is optional (but still an error)
                 LOGGER.error("Failed to load optional dependency {} of {}", data.description.id, description.id, e);
             }
         }
+
+        // create plugin class loader for plugin
         PluginClassLoader loader = new PluginClassLoader(this, new URL[]{path.toUri().toURL()}, getClass().getClassLoader());
         Class<?> clazz;
         try {
+            // load main class
             clazz = loader.loadClass(description.main);
         } catch (ClassNotFoundException e) {
             LOGGER.error("Failed to find main class of {}: {}", description.id, description.main, e);
@@ -132,6 +160,7 @@ public class SimplePluginLoader implements PluginLoader {
         }
         Class<? extends Plugin> pluginClass;
         try {
+            // cast to plugin class
             pluginClass = clazz.asSubclass(Plugin.class);
         } catch (ClassCastException e) {
             LOGGER.error("Class {} does not extends {}", description.main, Plugin.class.getTypeName());
@@ -140,13 +169,21 @@ public class SimplePluginLoader implements PluginLoader {
         }
         Plugin plugin;
         try {
+            // create an instance of plugin
             plugin = pluginClass.getConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             LOGGER.error("Could not invoke constructor of {}", description.main);
             loader.close();
             return;
         }
-        plugin.init(description);
+        try {
+            plugin.init(description);
+        } catch (Exception e) {
+            // this could happen if events could not be registered
+            LOGGER.error("Could not initialize plugin {}", description.id);
+            loader.close();
+            return;
+        }
         plugins.add(plugin);
         loaders.add(loader);
         id2PluginMap.put(description.id, plugin);
@@ -157,10 +194,7 @@ public class SimplePluginLoader implements PluginLoader {
     @Override
     public Plugin getPlugin(@NotNull String id) {
         Objects.requireNonNull(id, "id cannot be null");
-        for (Plugin plugin : plugins) {
-            if (id.equals(plugin.getId())) return plugin;
-        }
-        return null;
+        return id2PluginMap.get(id);
     }
 
     @NotNull
@@ -168,6 +202,7 @@ public class SimplePluginLoader implements PluginLoader {
     public PluginDescriptionFile loadPluginDescriptionFile(@NotNull PluginFile pluginFile) throws IOException {
         InputStream in = pluginFile.getResourceAsStream("plugin.yml");
         if (in == null) throw new FileNotFoundException("plugin.yml does not exist");
+        // parse yaml as object
         YamlObject obj = new YamlConfiguration(in).asObject();
         return PluginDescriptionFile.load(obj);
     }
@@ -180,6 +215,7 @@ public class SimplePluginLoader implements PluginLoader {
         }
         for (URLClassLoader loader : loaders) loader.close();
         plugins.clear();
+        loaders.clear();
     }
 
     @NotNull
@@ -193,8 +229,10 @@ public class SimplePluginLoader implements PluginLoader {
         return !ProxyConfigInstance.disablePlugins;
     }
 
+    // disable != unload
     @Override
     public void disablePlugin(@NotNull Plugin plugin) {
+        // TODO: Fire PluginDisableEvent
         ProxyInstance.getInstance().getEventManager().unregisterEvents(plugin);
         LOGGER.info("Disabled plugin {} [{}] ({})", plugin.getName(), plugin.getId(), plugin.getDescription().version);
     }
