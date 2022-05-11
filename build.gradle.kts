@@ -30,17 +30,17 @@ subprojects {
     }
 
     dependencies {
-        compileOnly("org.jetbrains:annotations:23.0.0")
+        compileOnlyApi("org.jetbrains:annotations:23.0.0")
         testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
     }
 
     tasks {
-        getByName<Test>("test") {
+        test {
             useJUnitPlatform()
         }
 
-        withType<ProcessResources> {
+        processResources {
             from(sourceSets.main.get().resources.srcDirs) {
                 include("**")
                 val tokenReplacementMap = mapOf(
@@ -54,7 +54,7 @@ subprojects {
             from(projectDir) { include("LICENSE") }
         }
 
-        withType<Jar> {
+        jar {
             manifest {
                 attributes(
                     "Main-Class" to "net.azisaba.simpleProxy.proxy.Main",

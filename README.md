@@ -10,6 +10,7 @@ Very simple TCP reverse proxy
 |-----------|----------------------------------------------------------------------------------------------------------|
 | TERM, INT | fast shutdown                                                                                            |
 | HUP       | reloads configuration and spawns new listener with new configuration, graceful shutdown of old listeners |
+| QUIT      | graceful shutdown                                                                                        |
 
 ## Usage
 

@@ -23,20 +23,20 @@ public class DebugRuleCommand implements CommandHandler {
         }
         String address = args.get(0);
         RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(address);
-        LOGGER.info(Util.ANSI_CYAN + "Check result for {}:" + Util.ANSI_RESET, address);
         String resultColor;
         if (result.getRuleType() == RuleType.ALLOW) {
             resultColor = Util.ANSI_GREEN;
         } else {
             resultColor = Util.ANSI_RED;
         }
-        LOGGER.info(Util.ANSI_YELLOW + "  Result: {}{}" + Util.ANSI_RESET, resultColor, result.getRuleType().getName());
         String cause;
         if (result.getCause() == null) {
             cause = "null";
         } else {
             cause = result.getCause().getRawString();
         }
+        LOGGER.info(Util.ANSI_CYAN + "Check result for {}:" + Util.ANSI_RESET, address);
+        LOGGER.info(Util.ANSI_YELLOW + "  Result: {}{}" + Util.ANSI_RESET, resultColor, result.getRuleType().getName());
         LOGGER.info(Util.ANSI_YELLOW + "  Cause: {}{}" + Util.ANSI_RESET, Util.ANSI_CYAN, cause);
         LOGGER.info(Util.ANSI_YELLOW + "  Reason: {}{}" + Util.ANSI_RESET, Util.ANSI_CYAN, result.getReason());
     }

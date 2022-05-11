@@ -200,8 +200,13 @@ public class SimplePluginLoader implements PluginLoader {
     @NotNull
     @Override
     public PluginDescriptionFile loadPluginDescriptionFile(@NotNull PluginFile pluginFile) throws IOException {
-        InputStream in = pluginFile.getResourceAsStream("plugin.yml");
-        if (in == null) throw new FileNotFoundException("plugin.yml does not exist");
+        InputStream in = pluginFile.getResourceAsStream("simpleproxy-plugin.yml");
+        if (in == null) {
+            in = pluginFile.getResourceAsStream("plugin.yml");
+        }
+        if (in == null) {
+            throw new FileNotFoundException("Both plugin.yml and simpleproxy-plugin.yml does not exist");
+        }
         // parse yaml as object
         YamlObject obj = new YamlConfiguration(in).asObject();
         return PluginDescriptionFile.load(obj);
