@@ -28,8 +28,7 @@ public class Rule {
     // Example of unacceptable (invalid) syntax:
     // - drop from 1.1.1.1 (rule type of "drop" isn't supported)
     // - accept from 1.1.1.1 (rule type of "accept" does not exist)
-    // - pls accept from all (first token must be rule type)
-    // - deny from all (please specify 0.0.0.0/0 (v4) and/or ::/0 (v6) manually)
+    // - deny from all (please specify 0.0.0.0/0 (v4) and ::/0 (v6) manually)
     @Contract(pure = true)
     @NotNull
     public static Rule parse(@NotNull String input) throws InvalidArgumentException {

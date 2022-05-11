@@ -5,8 +5,6 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -66,12 +64,12 @@ public class ConnectionListener {
         } else {
             bossGroup = new NioEventLoopGroup(r -> {
                 Thread t = new Thread(r);
-                t.setName("Netty IO Boss Server Thread #" + BOSS_THREAD_COUNT.incrementAndGet());
+                t.setName("Netty IO Server Boss Thread #" + BOSS_THREAD_COUNT.incrementAndGet());
                 return t;
             });
             workerGroup = new NioEventLoopGroup(r -> {
                 Thread t = new Thread(r);
-                t.setName("Netty IO Worker Server Thread #" + WORKER_THREAD_COUNT.incrementAndGet());
+                t.setName("Netty IO Server Worker Thread #" + WORKER_THREAD_COUNT.incrementAndGet());
                 return t;
             });
             clientWorkerGroup = new NioEventLoopGroup(r -> {
