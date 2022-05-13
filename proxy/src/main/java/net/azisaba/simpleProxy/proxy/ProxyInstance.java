@@ -9,6 +9,7 @@ import net.azisaba.simpleProxy.api.config.ProxyConfig;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyInitializeEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyReloadEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent;
+import net.azisaba.simpleProxy.api.yaml.YamlObject;
 import net.azisaba.simpleProxy.proxy.commands.DebugRuleCommand;
 import net.azisaba.simpleProxy.proxy.commands.HelpCommand;
 import net.azisaba.simpleProxy.proxy.commands.ReloadCommand;
@@ -273,6 +274,11 @@ public class ProxyInstance implements ProxyServer {
         @Override
         public @NotNull ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo) {
             return new MessageForwarder(ch, listenerInfo);
+        }
+
+        @Override
+        public @NotNull ListenerInfo createListenerInfo(@NotNull YamlObject obj) {
+            return new ListenerInfoImpl(obj);
         }
     }
 }

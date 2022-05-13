@@ -8,6 +8,8 @@ import net.azisaba.simpleProxy.api.config.ProxyConfig;
 import net.azisaba.simpleProxy.api.event.EventManager;
 import net.azisaba.simpleProxy.api.plugin.loader.PluginLoader;
 import net.azisaba.simpleProxy.api.util.ProxyVersion;
+import net.azisaba.simpleProxy.api.yaml.YamlObject;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +79,12 @@ public interface ProxyServer {
     Unsafe unsafe();
 
     interface Unsafe {
+        @Contract(value = "_, _ -> new", pure = true)
         @NotNull
         ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo);
+
+        @Contract(value = "_ -> new", pure = true)
+        @NotNull
+        ListenerInfo createListenerInfo(@NotNull YamlObject obj);
     }
 }
