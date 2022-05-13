@@ -9,10 +9,19 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            preload();
             SignalUtil.registerAll();
             new ProxyInstance().start();
         } catch (Throwable throwable) {
             LOGGER.fatal("Failed to start proxy server", throwable);
+        }
+    }
+
+    private static void preload() {
+        try {
+            Class.forName("net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent"); // avoid stuck on shutdown when jar is replaced
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 }
