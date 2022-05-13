@@ -8,6 +8,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
+import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionActiveEvent;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import org.apache.logging.log4j.LogManager;
@@ -49,6 +50,25 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         if (ProxyConfigInstance.debug) {
             LOGGER.info("Forwarder: Established connection: " + ctx.channel());
         }
+    }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        if (ctx.channel().isActive()) {
+            // handler added while the channel is active (added by plugin)
+            ctx.read();
+            if (ProxyConfigInstance.debug) {
+                LOGGER.info("Forwarder: Established connection: " + ctx.channel());
+            }
+            if (remote == null && !remoteConnecting) {
+                remoteConnecting = true;
+                ChannelFuture future = ProxyInstance.getInstance()
+                        .getConnectionListener()
+                        .connect(this, remoteServerInfo);
+                remote = future.channel();
+            }
+        }
+        super.handlerAdded(ctx);
     }
 
     @Override
@@ -117,6 +137,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     void remoteActive() {
         isRemoteActive = true;
         flushQueue();
+        new RemoteConnectionActiveEvent(listenerInfo, remote, channel, sourceAddress).callEvent();
     }
 
     public void flushQueue() {

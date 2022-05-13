@@ -1,0 +1,21 @@
+package net.azisaba.simpleProxy.api.event.connection;
+
+import io.netty.channel.Channel;
+import net.azisaba.simpleProxy.api.event.Event;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+
+public abstract class ChannelEvent extends Event {
+    protected final Channel channel;
+
+    public ChannelEvent(@NotNull Channel channel) {
+        Objects.requireNonNull(channel, "channel");
+        this.channel = channel;
+    }
+
+    @NotNull
+    public Channel getChannel() {
+        return channel;
+    }
+}
