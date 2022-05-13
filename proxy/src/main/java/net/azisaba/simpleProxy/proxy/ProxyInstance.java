@@ -1,7 +1,10 @@
 package net.azisaba.simpleProxy.proxy;
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.azisaba.simpleProxy.api.ProxyServer;
 import net.azisaba.simpleProxy.api.ProxyServerHolder;
+import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ProxyConfig;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyInitializeEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyReloadEvent;
@@ -16,6 +19,7 @@ import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import net.azisaba.simpleProxy.proxy.connection.ConnectionListener;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
 import net.azisaba.simpleProxy.api.command.InvalidArgumentException;
+import net.azisaba.simpleProxy.proxy.connection.MessageForwarder;
 import net.azisaba.simpleProxy.proxy.event.SimpleEventManager;
 import net.azisaba.simpleProxy.proxy.plugin.SimplePluginLoader;
 import net.azisaba.simpleProxy.proxy.util.Util;
@@ -256,5 +260,19 @@ public class ProxyInstance implements ProxyServer {
             Thread.currentThread().interrupt();
         }
         LOGGER.info("Goodbye!");
+    }
+
+    @Override
+    public @NotNull Unsafe unsafe() {
+        return TheUnsafe.INSTANCE;
+    }
+
+    public static class TheUnsafe implements Unsafe {
+        private static final Unsafe INSTANCE = new TheUnsafe();
+
+        @Override
+        public @NotNull ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo) {
+            return new MessageForwarder(ch, listenerInfo);
+        }
     }
 }
