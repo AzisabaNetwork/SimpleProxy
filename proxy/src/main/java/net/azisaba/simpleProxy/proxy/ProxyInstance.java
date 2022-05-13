@@ -6,6 +6,7 @@ import net.azisaba.simpleProxy.api.ProxyServer;
 import net.azisaba.simpleProxy.api.ProxyServerHolder;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ProxyConfig;
+import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyInitializeEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyReloadEvent;
 import net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent;
@@ -17,6 +18,7 @@ import net.azisaba.simpleProxy.proxy.commands.StopCommand;
 import net.azisaba.simpleProxy.proxy.config.ListenerInfoImpl;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigImpl;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
+import net.azisaba.simpleProxy.proxy.config.ServerInfoImpl;
 import net.azisaba.simpleProxy.proxy.connection.ConnectionListener;
 import net.azisaba.simpleProxy.api.command.CommandHandler;
 import net.azisaba.simpleProxy.api.command.InvalidArgumentException;
@@ -272,13 +274,18 @@ public class ProxyInstance implements ProxyServer {
         private static final Unsafe INSTANCE = new TheUnsafe();
 
         @Override
-        public @NotNull ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo) {
-            return new MessageForwarder(ch, listenerInfo);
+        public @NotNull ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo, @NotNull ServerInfo remoteServerInfo) {
+            return new MessageForwarder(ch, listenerInfo, remoteServerInfo);
         }
 
         @Override
         public @NotNull ListenerInfo createListenerInfo(@NotNull YamlObject obj) {
             return new ListenerInfoImpl(obj);
+        }
+
+        @Override
+        public @NotNull ServerInfo createServerInfo(@NotNull YamlObject obj) {
+            return new ServerInfoImpl(obj);
         }
     }
 }

@@ -30,11 +30,13 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ConnectionListener {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Random RANDOM = new Random();
     private static final AtomicLong BOSS_THREAD_COUNT = new AtomicLong();
     private static final AtomicLong WORKER_THREAD_COUNT = new AtomicLong();
     private static final AtomicLong CLIENT_WORKER_THREAD_COUNT = new AtomicLong();
@@ -100,7 +102,8 @@ public class ConnectionListener {
                     ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());
                 }
                 if (!listenerInfo.getServers().isEmpty()) {
-                    ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo));
+                    ServerInfo remoteServerInfo = listenerInfo.getServers().get(RANDOM.nextInt(listenerInfo.getServers().size()));
+                    ch.pipeline().addLast("message_forwarder", new MessageForwarder(ch, listenerInfo, remoteServerInfo));
                 } else if (!warningMessageShown) {
                     LOGGER.warn("Not adding message forwarder because listener for " + listenerInfo.getListenPort() + " has empty servers list");
                     warningMessageShown = true;

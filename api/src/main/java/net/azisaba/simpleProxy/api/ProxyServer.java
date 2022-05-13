@@ -5,6 +5,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.azisaba.simpleProxy.api.command.CommandManager;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ProxyConfig;
+import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.EventManager;
 import net.azisaba.simpleProxy.api.plugin.loader.PluginLoader;
 import net.azisaba.simpleProxy.api.util.ProxyVersion;
@@ -79,12 +80,16 @@ public interface ProxyServer {
     Unsafe unsafe();
 
     interface Unsafe {
-        @Contract(value = "_, _ -> new", pure = true)
+        @Contract(value = "_, _, _ -> new", pure = true)
         @NotNull
-        ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo);
+        ChannelInboundHandlerAdapter createMessageForwarder(@NotNull Channel ch, @NotNull ListenerInfo listenerInfo, @NotNull ServerInfo remoteServerInfo);
 
         @Contract(value = "_ -> new", pure = true)
         @NotNull
         ListenerInfo createListenerInfo(@NotNull YamlObject obj);
+
+        @Contract(value = "_ -> new", pure = true)
+        @NotNull
+        ServerInfo createServerInfo(@NotNull YamlObject obj);
     }
 }

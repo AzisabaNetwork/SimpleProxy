@@ -17,15 +17,13 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Queue;
 
 public class MessageForwarder extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public final ListenerInfo listenerInfo;
+    public final ServerInfo remoteServerInfo;
     protected final Queue<Object> queue = new ArrayDeque<>();
     protected Channel channel;
     protected Channel remote = null;
@@ -37,9 +35,10 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     boolean deactivated = false;
     boolean isRemoteActive = false;
 
-    public MessageForwarder(Channel channel, ListenerInfo listenerInfo) {
+    public MessageForwarder(@NotNull Channel channel, @NotNull ListenerInfo listenerInfo, @NotNull ServerInfo remoteServerInfo) {
         this.channel = channel;
         this.listenerInfo = listenerInfo;
+        this.remoteServerInfo = remoteServerInfo;
         this.sourceAddress = channel.remoteAddress();
     }
 
@@ -86,11 +85,9 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         }
         if (remote == null && !remoteConnecting) {
             remoteConnecting = true;
-            List<ServerInfo> list = new ArrayList<>(listenerInfo.getServers());
-            Collections.shuffle(list);
             ChannelFuture future = ProxyInstance.getInstance()
                     .getConnectionListener()
-                    .connect(this, list.get(0));
+                    .connect(this, remoteServerInfo);
             remote = future.channel();
         }
         if (remote == null || !remote.isActive()) {
