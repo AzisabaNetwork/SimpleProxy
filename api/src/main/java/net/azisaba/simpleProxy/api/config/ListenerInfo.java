@@ -1,5 +1,6 @@
 package net.azisaba.simpleProxy.api.config;
 
+import net.azisaba.simpleProxy.api.yaml.YamlObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,4 +24,11 @@ public interface ListenerInfo {
 
     @Nullable
     String getType();
+
+    /**
+     * Returns the raw config object.
+     * @return the config
+     */
+    @NotNull
+    YamlObject getConfig();
 }

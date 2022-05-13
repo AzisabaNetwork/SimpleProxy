@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ListenerInfoImpl implements ListenerInfo {
+    private final YamlObject config;
     private final String host;
     private final int listenPort;
     private final List<ServerInfo> servers;
@@ -24,7 +25,8 @@ public class ListenerInfoImpl implements ListenerInfo {
     private final Protocol protocol;
     private final String type;
 
-    public ListenerInfoImpl(@NotNull String host,
+    public ListenerInfoImpl(@NotNull YamlObject config,
+                            @NotNull String host,
                             int listenPort,
                             @NotNull List<ServerInfo> servers,
                             boolean proxyProtocol,
@@ -32,8 +34,10 @@ public class ListenerInfoImpl implements ListenerInfo {
                             @NotNull Protocol protocol,
                             @Nullable String type) {
         if (listenPort <= 0 || listenPort > 65535) throw new RuntimeException("Port is out of range: " + listenPort);
+        Objects.requireNonNull(config, "config cannot be null");
         Objects.requireNonNull(host, "host cannot be null");
         Objects.requireNonNull(servers, "servers cannot be null");
+        this.config = config;
         this.host = host;
         this.listenPort = listenPort;
         this.servers = servers;
@@ -45,6 +49,7 @@ public class ListenerInfoImpl implements ListenerInfo {
 
     public ListenerInfoImpl(@NotNull YamlObject obj) {
         this(
+                obj,
                 obj.getString("host", "0.0.0.0"),
                 obj.getInt("listenPort"),
                 Util.getOrGet(() -> obj.getArray("servers"), YamlArray::new).<Map<String, Object>, ServerInfo>mapAsType(map ->
@@ -94,5 +99,10 @@ public class ListenerInfoImpl implements ListenerInfo {
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public @NotNull YamlObject getConfig() {
+        return config;
     }
 }
