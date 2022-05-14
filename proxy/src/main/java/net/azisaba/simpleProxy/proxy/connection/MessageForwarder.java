@@ -33,6 +33,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
      * The address which the user is connecting from.
      */
     protected SocketAddress sourceAddress;
+    protected boolean active = false;
     boolean deactivated = false;
     boolean isRemoteActive = false;
 
@@ -50,25 +51,23 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         if (ProxyConfigInstance.debug) {
             LOGGER.info("Forwarder: Established connection: " + ctx.channel());
         }
+        active = true;
     }
 
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        if (ctx.channel().isActive()) {
-            // handler added while the channel is active (added by plugin)
-            ctx.read();
+    public void activate() {
+        if (!active) {
+            channel.read();
             if (ProxyConfigInstance.debug) {
-                LOGGER.info("Forwarder: Established connection: " + ctx.channel());
-            }
-            if (remote == null && !remoteConnecting) {
-                remoteConnecting = true;
-                ChannelFuture future = ProxyInstance.getInstance()
-                        .getConnectionListener()
-                        .connect(this, remoteServerInfo);
-                remote = future.channel();
+                LOGGER.info("Forwarder: Established connection: " + channel);
             }
         }
-        super.handlerAdded(ctx);
+        if (remote == null && !remoteConnecting) {
+            remoteConnecting = true;
+            ChannelFuture future = ProxyInstance.getInstance()
+                    .getConnectionListener()
+                    .connect(this, remoteServerInfo);
+            remote = future.channel();
+        }
     }
 
     @Override
@@ -103,13 +102,7 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
             super.channelRead(ctx, msg);
             return;
         }
-        if (remote == null && !remoteConnecting) {
-            remoteConnecting = true;
-            ChannelFuture future = ProxyInstance.getInstance()
-                    .getConnectionListener()
-                    .connect(this, remoteServerInfo);
-            remote = future.channel();
-        }
+        activate();
         if (remote == null || !remote.isActive()) {
             if (msg instanceof ByteBuf) {
                 queue.add(((ByteBuf) msg).copy());
