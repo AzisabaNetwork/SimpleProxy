@@ -163,7 +163,7 @@ public class SimplePluginLoader implements PluginLoader {
             // cast to plugin class
             pluginClass = clazz.asSubclass(Plugin.class);
         } catch (ClassCastException e) {
-            LOGGER.error("Class {} does not extends {}", description.main, Plugin.class.getTypeName());
+            LOGGER.error("Class {} does not extends {}", description.main, Plugin.class.getTypeName(), e);
             loader.close();
             return;
         }
@@ -172,7 +172,7 @@ public class SimplePluginLoader implements PluginLoader {
             // create an instance of plugin
             plugin = pluginClass.getConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            LOGGER.error("Could not invoke constructor of {}", description.main);
+            LOGGER.error("Could not invoke constructor of {}", description.main, e);
             loader.close();
             return;
         }
@@ -180,7 +180,7 @@ public class SimplePluginLoader implements PluginLoader {
             plugin.init(description);
         } catch (Exception e) {
             // this could happen if events could not be registered
-            LOGGER.error("Could not initialize plugin {}", description.id);
+            LOGGER.error("Could not initialize plugin {}", description.id, e);
             loader.close();
             return;
         }
