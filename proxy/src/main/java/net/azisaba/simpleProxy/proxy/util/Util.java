@@ -1,7 +1,10 @@
 package net.azisaba.simpleProxy.proxy.util;
 
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.ReferenceCounted;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -41,5 +44,29 @@ public class Util {
         T value = valueSupplier.get();
         if (value == null) return defSupplier.get();
         return value;
+    }
+
+    /**
+     * Try to release the object and returns the number of freed objects.
+     * @param o the object, this can be an instance of ReferenceCounted or Iterable to free all elements.
+     * @return the number of freed objects.
+     */
+    public static int release(@Nullable Object o) {
+        if (o == null) {
+            return 0;
+        }
+        if (o instanceof ReferenceCounted) {
+            if (((ReferenceCounted) o).release()) {
+                return 1; // return 1 only if the object has been deallocated
+            }
+        } else if (o instanceof Iterable<?>) {
+            Iterable<?> itr = (Iterable<?>) o;
+            int freed = 0;
+            for (Object o1 : itr) {
+                freed += release(o1);
+            }
+            return freed;
+        }
+        return 0;
     }
 }

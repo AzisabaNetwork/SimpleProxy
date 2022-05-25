@@ -12,6 +12,7 @@ import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
+import net.azisaba.simpleProxy.proxy.util.MemoryReserve;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -121,5 +122,8 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(@NotNull ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.warn("Caught exception!", cause);
         ctx.channel().close();
+        if (cause instanceof OutOfMemoryError) {
+            MemoryReserve.tryShutdownGracefully();
+        }
     }
 }

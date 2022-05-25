@@ -11,6 +11,8 @@ import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionActiveEvent;
 import net.azisaba.simpleProxy.proxy.ProxyInstance;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
+import net.azisaba.simpleProxy.proxy.util.MemoryReserve;
+import net.azisaba.simpleProxy.proxy.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +79,8 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
         if (remote != null) remote.close();
         if (ProxyConfigInstance.debug) {
-            LOGGER.info("Forwarder: Closed connection: " + ctx.channel());
+            int freed = Util.release(queue);
+            LOGGER.info("Forwarder: Closed connection: {} (freed {} objects)", ctx.channel(), freed);
         }
     }
 
@@ -125,6 +128,9 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.warn("Caught exception in {}!", ctx.channel(), cause);
         ctx.channel().close();
+        if (cause instanceof OutOfMemoryError) {
+            MemoryReserve.tryShutdownGracefully();
+        }
     }
 
     void remoteActive() {

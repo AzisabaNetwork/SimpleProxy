@@ -1,5 +1,6 @@
 package net.azisaba.simpleProxy.proxy;
 
+import net.azisaba.simpleProxy.proxy.util.MemoryReserve;
 import net.azisaba.simpleProxy.proxy.util.SignalUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,6 +12,7 @@ public class Main {
         try {
             preload();
             SignalUtil.registerAll();
+            MemoryReserve.reserve();
             new ProxyInstance().start();
         } catch (Throwable throwable) {
             LOGGER.fatal("Failed to start proxy server", throwable);
