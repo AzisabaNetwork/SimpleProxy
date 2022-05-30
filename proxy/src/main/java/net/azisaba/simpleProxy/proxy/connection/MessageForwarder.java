@@ -81,6 +81,8 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         if (ProxyConfigInstance.debug) {
             int freed = Util.release(queue);
             LOGGER.info("Forwarder: Closed connection: {} (freed {} objects)", ctx.channel(), freed);
+        } else {
+            Util.release(queue);
         }
     }
 

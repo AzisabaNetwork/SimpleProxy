@@ -1,6 +1,5 @@
 package net.azisaba.simpleProxy.proxy.util;
 
-import io.netty.util.ReferenceCountUtil;
 import io.netty.util.ReferenceCounted;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
