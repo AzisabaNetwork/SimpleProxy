@@ -2,6 +2,7 @@ package net.azisaba.simpleProxy.proxy;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.ResourceLeakDetector;
 import net.azisaba.simpleProxy.api.ProxyServer;
 import net.azisaba.simpleProxy.api.ProxyServerHolder;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
@@ -184,6 +185,15 @@ public class ProxyInstance implements ProxyServer {
             }
             if (!pluginLoader.isEnabled()) LOGGER.info("Plugin loader is disabled");
             if (!eventManager.isEnabled()) LOGGER.info("Event manager is disabled");
+            ResourceLeakDetector.Level resourceLeakDetectorLevel = ResourceLeakDetector.Level.SIMPLE;
+            if (ProxyConfigInstance.debug) {
+                LOGGER.info("Debug mode is enabled");
+                resourceLeakDetectorLevel = ResourceLeakDetector.Level.PARANOID;
+            } else if (ProxyConfigInstance.verbose) {
+                LOGGER.info("Verbose mode is enabled");
+                resourceLeakDetectorLevel = ResourceLeakDetector.Level.ADVANCED;
+            }
+            LOGGER.info("Resource leak detector level is set to {}", resourceLeakDetectorLevel);
             List<ListenerInfoImpl> listeners = ProxyConfigInstance.listeners;
             if (listeners.isEmpty()) {
                 LOGGER.warn("No listeners defined");
@@ -258,7 +268,7 @@ public class ProxyInstance implements ProxyServer {
         worker.shutdownNow();
         try {
             //noinspection ResultOfMethodCallIgnored
-            worker.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            worker.awaitTermination(3, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

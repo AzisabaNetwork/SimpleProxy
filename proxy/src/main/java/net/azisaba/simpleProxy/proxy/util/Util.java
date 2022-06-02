@@ -1,5 +1,7 @@
 package net.azisaba.simpleProxy.proxy.util;
 
+import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
+import io.netty.util.NetUtil;
 import io.netty.util.ReferenceCounted;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +11,9 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 public class Util {
+    public static final String IPV4_LOOP_BACK = "127.0.0.1";
+    public static final String IPV6_LOOP_BACK = "::1";
+
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
     public static final String ANSI_RED = "\u001B[31m";
@@ -67,5 +72,25 @@ public class Util {
             return freed;
         }
         return 0;
+    }
+
+    @Contract(pure = true)
+    @NotNull
+    public static String getDestinationAddressForHAProxy(@NotNull HAProxyProxiedProtocol proxiedProtocol, @NotNull String destAddress) {
+        if (proxiedProtocol.addressFamily() == HAProxyProxiedProtocol.AddressFamily.AF_IPv4) {
+            if (NetUtil.isValidIpV4Address(destAddress)) {
+                return destAddress;
+            } else {
+                return IPV4_LOOP_BACK;
+            }
+        } else if (proxiedProtocol.addressFamily() == HAProxyProxiedProtocol.AddressFamily.AF_IPv6) {
+            if (NetUtil.isValidIpV6Address(destAddress)) {
+                return destAddress;
+            } else {
+                return IPV6_LOOP_BACK;
+            }
+        } else {
+            return destAddress;
+        }
     }
 }

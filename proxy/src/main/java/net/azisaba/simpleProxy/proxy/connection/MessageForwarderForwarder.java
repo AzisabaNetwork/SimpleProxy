@@ -9,19 +9,17 @@ import io.netty.handler.codec.haproxy.HAProxyCommand;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
-import net.azisaba.simpleProxy.api.config.Protocol;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.proxy.config.ProxyConfigInstance;
 import net.azisaba.simpleProxy.proxy.util.MemoryReserve;
+import net.azisaba.simpleProxy.proxy.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 
 public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -47,29 +45,23 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         }
     }
 
-    public void initHAProxy(@NotNull ChannelHandlerContext ctx) throws UnknownHostException {
-        HAProxyProxiedProtocol proxiedProtocol;
-        if (InetAddress.getByName(serverInfo.getHost()) instanceof Inet6Address) {
-            if (forwarder.listenerInfo.getProtocol() == Protocol.TCP) {
-                proxiedProtocol = HAProxyProxiedProtocol.TCP6;
-            } else {
-                proxiedProtocol = HAProxyProxiedProtocol.UDP6;
-            }
-        } else {
-            if (forwarder.listenerInfo.getProtocol() == Protocol.TCP) {
-                proxiedProtocol = HAProxyProxiedProtocol.TCP4;
-            } else {
-                proxiedProtocol = HAProxyProxiedProtocol.UDP4;
-            }
-        }
+    public void initHAProxy(@NotNull ChannelHandlerContext ctx) {
+        HAProxyProxiedProtocol proxiedProtocol = HAProxyProxiedProtocol.UNKNOWN;
         SocketAddress socketAddress = forwarder.sourceAddress;
         String hostAddress = null;
         int port = 0;
         if (socketAddress instanceof InetSocketAddress) {
-            hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
-            port = ((InetSocketAddress) socketAddress).getPort();
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+            hostAddress = inetSocketAddress.getAddress().getHostAddress();
+            port = inetSocketAddress.getPort();
+            if (inetSocketAddress.getAddress() instanceof Inet6Address) {
+                proxiedProtocol = HAProxyProxiedProtocol.TCP6;
+            } else {
+                proxiedProtocol = HAProxyProxiedProtocol.TCP4;
+            }
         } else if (socketAddress instanceof DomainSocketAddress) {
             hostAddress = ((DomainSocketAddress) socketAddress).path();
+            proxiedProtocol = HAProxyProxiedProtocol.UNIX_STREAM;
         } else {
             LOGGER.warn("Unrecognized socket address type {}: {}", socketAddress.getClass().getTypeName(), socketAddress);
         }
@@ -78,7 +70,7 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
                 HAProxyCommand.PROXY,
                 proxiedProtocol,
                 hostAddress,
-                serverInfo.getHost(),
+                Util.getDestinationAddressForHAProxy(proxiedProtocol, serverInfo.getHost()),
                 port,
                 serverInfo.getPort()
         ));
