@@ -194,6 +194,7 @@ public class ProxyInstance implements ProxyServer {
                 resourceLeakDetectorLevel = ResourceLeakDetector.Level.ADVANCED;
             }
             LOGGER.info("Resource leak detector level is set to {}", resourceLeakDetectorLevel);
+            ResourceLeakDetector.setLevel(resourceLeakDetectorLevel);
             List<ListenerInfoImpl> listeners = ProxyConfigInstance.listeners;
             if (listeners.isEmpty()) {
                 LOGGER.warn("No listeners defined");
