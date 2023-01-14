@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import net.azisaba.simpleProxy.api.config.ListenerInfo;
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.event.connection.RemoteConnectionActiveEvent;
@@ -21,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 public class MessageForwarder extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,8 +38,8 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
      */
     protected SocketAddress sourceAddress;
     protected boolean active = false;
-    boolean deactivated = false;
-    boolean isRemoteActive = false;
+    protected boolean deactivated = false;
+    protected boolean isRemoteActive = false;
 
     public MessageForwarder(@NotNull Channel channel, @NotNull ListenerInfo listenerInfo, @NotNull ServerInfo remoteServerInfo) {
         this.channel = channel;
@@ -64,7 +66,14 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
             }
         }
         if (remote == null && !remoteConnecting) {
+            if (channel.pipeline().context(ReadTimeoutHandler.class) != null) {
+                channel.pipeline().remove(ReadTimeoutHandler.class);
+                channel.pipeline().addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS));
+            }
             remoteConnecting = true;
+            if (ProxyConfigInstance.debug) {
+                LOGGER.info("Forwarder: Connecting to remote server: " + remoteServerInfo);
+            }
             ChannelFuture future = ProxyInstance.getInstance()
                     .getConnectionListener()
                     .connect(this, remoteServerInfo);
@@ -72,21 +81,33 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         }
     }
 
-    @Override
-    public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
-        super.channelInactive(ctx);
+    public void deactivate() {
+        if (deactivated) {
+            return;
+        }
         deactivated = true;
-        ctx.channel().close();
+        channel.close();
         if (remote != null) remote.close();
         if (ProxyConfigInstance.debug) {
             int freed = Util.release(queue);
-            LOGGER.info("Forwarder: Closed connection: {} (freed {} objects)", ctx.channel(), freed);
+            LOGGER.info("Forwarder: Closed connection: {} (freed {} objects)", channel, freed);
         } else {
             Util.release(queue);
         }
     }
 
-    public void writeToRemote(Object msg) {
+    @Override
+    public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        deactivate();
+    }
+
+    /**
+     * Writes a message to the remote server.
+     * @param msg the message
+     * @throws NullPointerException if remote is null
+     */
+    public void writeToRemote(Object msg) throws NullPointerException {
         if (ProxyConfigInstance.debug && msg instanceof ByteBuf) {
             LOGGER.debug("> OUT: " + ((ByteBuf) msg).readableBytes());
         }

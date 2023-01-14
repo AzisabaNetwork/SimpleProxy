@@ -41,7 +41,15 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
         ctx.read();
         forwarder.remoteActive();
         if (ProxyConfigInstance.debug) {
-            LOGGER.info("Remote: Established connection: " + ctx.channel());
+            LOGGER.info("Remote: Established connection: {} (forwarder: A: {} Ch: {} CA: {} D: {})",
+                    ctx.channel(), forwarder.active, forwarder.sourceAddress, forwarder.channel.isActive(), forwarder.deactivated);
+        }
+        if (!forwarder.channel.isActive()) {
+            if (ProxyConfigInstance.debug) {
+                LOGGER.info("Remote: Closing connection due to inactive forwarder channel");
+            }
+            ctx.close();
+            forwarder.deactivate();
         }
     }
 
@@ -102,11 +110,11 @@ public class MessageForwarderForwarder extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-        forwarder.deactivated = true;
-        forwarder.channel.close();
+        forwarder.deactivate();
         ctx.channel().close();
         if (ProxyConfigInstance.debug) {
-            LOGGER.info("Remote: Closed connection: " + ctx.channel());
+            LOGGER.info("Remote: Closed connection: {} (forwarder: A: {} Ch: {} CA: {} D: {})",
+                    ctx.channel(), forwarder.active, forwarder.sourceAddress, forwarder.channel.isActive(), forwarder.deactivated);
         }
     }
 

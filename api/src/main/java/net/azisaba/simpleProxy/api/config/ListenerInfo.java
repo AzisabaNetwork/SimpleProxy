@@ -17,6 +17,8 @@ public interface ListenerInfo {
 
     boolean isProxyProtocol();
 
+    int getInitialTimeout();
+
     int getTimeout();
 
     @NotNull

@@ -8,18 +8,35 @@ import sun.misc.Signal;
 
 public class SignalUtil {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static boolean registeredShutdownHook = false;
 
-    public static void register(@NotNull String name, @NotNull Runnable runnable) {
+    /**
+     * Registers a signal handler for the given signal.
+     * @param name The name of the signal to register a handler for. (e.g. "INT")
+     * @param runnable the task to run when the signal is received.
+     * @return true if the signal was successfully registered, false otherwise.
+     */
+    public static boolean register(@NotNull String name, @NotNull Runnable runnable) {
         try {
             Signal.handle(new Signal(name), sig -> runnable.run());
-        } catch (IllegalArgumentException e) {
+            return true;
+        } catch (Throwable e) {
             LOGGER.debug("Error registering signal {}", name, e);
+            return false;
         }
     }
 
     public static void registerAll() {
-        register("TERM", () -> ProxyInstance.getInstance().stop());
-        register("INT", () -> ProxyInstance.getInstance().stop());
+        if (register("TERM", () -> ProxyInstance.getInstance().stop())) {
+            registeredShutdownHook = true;
+        }
+        if (register("INT", () -> ProxyInstance.getInstance().stop())) {
+            registeredShutdownHook = true;
+        }
         register("HUP", () -> ProxyInstance.getInstance().reloadConfig());
+
+        if (!registeredShutdownHook) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> ProxyInstance.getInstance().stop()));
+        }
     }
 }

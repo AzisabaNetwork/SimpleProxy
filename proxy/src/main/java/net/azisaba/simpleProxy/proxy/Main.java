@@ -21,7 +21,7 @@ public class Main {
 
     private static void preload() {
         try {
-            // avoid stuck on shutdown when jar is replaced
+            // avoid stuck on shutdown if jar is replaced before shutdown
             Class.forName("net.azisaba.simpleProxy.api.event.proxy.ProxyShutdownEvent");
             Class.forName("org.apache.logging.log4j.core.async.InternalAsyncUtil");
         } catch (ClassNotFoundException e) {

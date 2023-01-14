@@ -21,6 +21,7 @@ public class ListenerInfoImpl implements ListenerInfo {
     private final int listenPort;
     private final List<ServerInfo> servers;
     private final boolean proxyProtocol;
+    private final int initialTimeout;
     private final int timeout;
     private final Protocol protocol;
     private final String type;
@@ -30,6 +31,7 @@ public class ListenerInfoImpl implements ListenerInfo {
                             int listenPort,
                             @NotNull List<ServerInfo> servers,
                             boolean proxyProtocol,
+                            int initialTimeout,
                             int timeout,
                             @NotNull Protocol protocol,
                             @Nullable String type) {
@@ -42,6 +44,7 @@ public class ListenerInfoImpl implements ListenerInfo {
         this.listenPort = listenPort;
         this.servers = servers;
         this.proxyProtocol = proxyProtocol;
+        this.initialTimeout = initialTimeout;
         this.timeout = timeout;
         this.protocol = protocol;
         this.type = type;
@@ -56,6 +59,7 @@ public class ListenerInfoImpl implements ListenerInfo {
                         new ServerInfoImpl(new YamlObject(YamlConfiguration.DEFAULT, map))
                 ),
                 obj.getBoolean("proxyProtocol", false),
+                obj.getInt("initialTimeout", 1000 * 5), // 5 seconds
                 obj.getInt("timeout", 1000 * 30), // 30 seconds
                 Protocol.valueOf(obj.getString("protocol", "tcp").toUpperCase(Locale.ROOT)),
                 obj.getString("type")
@@ -82,6 +86,11 @@ public class ListenerInfoImpl implements ListenerInfo {
     @Override
     public boolean isProxyProtocol() {
         return proxyProtocol;
+    }
+
+    @Override
+    public int getInitialTimeout() {
+        return initialTimeout;
     }
 
     @Override

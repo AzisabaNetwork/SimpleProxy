@@ -96,7 +96,7 @@ public class ConnectionListener {
                 } catch (ChannelException ignore) {
                 }
                 ch.pipeline()
-                        .addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS))
+                        .addFirst(new ReadTimeoutHandler(listenerInfo.getInitialTimeout(), TimeUnit.MILLISECONDS))
                         .addFirst("rule_check_handler", RuleCheckHandler.INSTANCE);
                 if (listenerInfo.isProxyProtocol()) {
                     ch.pipeline().addLast("haproxy_message_decoder", new HAProxyMessageDecoder());

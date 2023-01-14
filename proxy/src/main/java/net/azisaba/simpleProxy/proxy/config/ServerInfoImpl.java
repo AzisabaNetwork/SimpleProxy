@@ -2,6 +2,7 @@ package net.azisaba.simpleProxy.proxy.config;
 
 import net.azisaba.simpleProxy.api.config.ServerInfo;
 import net.azisaba.simpleProxy.api.yaml.YamlObject;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -37,5 +38,28 @@ public class ServerInfoImpl implements ServerInfo {
     @Override
     public boolean isProxyProtocol() {
         return proxyProtocol;
+    }
+
+    @Override
+    public String toString() {
+        return "ServerInfo{" +
+                "host='" + host + '\'' +
+                ", port=" + port +
+                ", proxyProtocol=" + proxyProtocol +
+                '}';
+    }
+
+    @Contract(value = "null -> false", pure = true)
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ServerInfoImpl)) return false;
+        ServerInfoImpl that = (ServerInfoImpl) o;
+        return getPort() == that.getPort() && isProxyProtocol() == that.isProxyProtocol() && getHost().equals(that.getHost());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getHost(), getPort(), isProxyProtocol());
     }
 }
