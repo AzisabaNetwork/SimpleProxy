@@ -1,12 +1,12 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "7.1.1"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     `java-library`
     `maven-publish`
 }
 
-group = "net.azisaba.simpleProxy"
-version = "1.1.7-SNAPSHOT"
+group = "net.azisaba.simpleproxy"
+version = "2.0.0-SNAPSHOT"
 
 extra.set("log4jVersion", "2.19.0")
 
@@ -30,7 +30,7 @@ subprojects {
     }
 
     dependencies {
-        compileOnlyApi("org.jetbrains:annotations:23.0.0")
+        compileOnlyApi("org.jetbrains:annotations:23.1.0")
         testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.1")
     }
@@ -57,7 +57,7 @@ subprojects {
         jar {
             manifest {
                 attributes(
-                    "Main-Class" to "net.azisaba.simpleProxy.proxy.Main",
+                    "Main-Class" to "net.azisaba.simpleproxy.proxy.Main",
                     "Multi-Release" to true,
                 )
             }
@@ -87,9 +87,9 @@ allprojects {
                 credentials(PasswordCredentials::class)
                 url = uri(
                     if (project.version.toString().endsWith("SNAPSHOT"))
-                        project.findProperty("deploySnapshotURL") ?: System.getProperty("deploySnapshotURL", "")
+                        project.findProperty("deploySnapshotURL") ?: System.getProperty("deploySnapshotURL", "https://repo.azisaba.net/repository/maven-snapshots/")
                     else
-                        project.findProperty("deployReleasesURL") ?: System.getProperty("deployReleasesURL", "")
+                        project.findProperty("deployReleasesURL") ?: System.getProperty("deployReleasesURL", "https://repo.azisaba.net/repository/maven-releases/")
                 )
             }
         }
