@@ -37,10 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ProxyInstance implements ProxyServer {
@@ -175,7 +172,12 @@ public class ProxyInstance implements ProxyServer {
     @Override
     public CompletableFuture<Void> reloadConfig() {
         return CompletableFuture.runAsync(() -> {
-            closeListeners();
+            try {
+                closeListeners();
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                LOGGER.error(e);
+                Thread.currentThread().interrupt();
+            }
             LOGGER.info("Loading config");
             try {
                 ProxyConfigInstance.init();
@@ -238,17 +240,17 @@ public class ProxyInstance implements ProxyServer {
         return proxyConfig;
     }
 
-    public void closeListeners() {
+    public void closeListeners() throws ExecutionException, InterruptedException, TimeoutException {
         if (connectionListener != null) {
             LOGGER.info("Closing listeners");
-            connectionListener.closeFutures();
+            connectionListener.closeFutures().get(3, TimeUnit.MINUTES);
         }
     }
 
-    public void fullyCloseListeners() {
+    public void fullyCloseListeners() throws ExecutionException, InterruptedException, TimeoutException {
         if (connectionListener != null) {
             LOGGER.info("Closing listeners");
-            connectionListener.close();
+            connectionListener.close().get(3, TimeUnit.MINUTES);
             connectionListener = null;
         }
     }
@@ -264,13 +266,14 @@ public class ProxyInstance implements ProxyServer {
         } catch (IOException e) {
             LOGGER.warn("Failed to close plugin loader", e);
         }
-        fullyCloseListeners();
-        LOGGER.info("Shutting down executor");
-        worker.shutdownNow();
         try {
+            fullyCloseListeners();
+            LOGGER.info("Shutting down executor");
+            worker.shutdownNow();
             //noinspection ResultOfMethodCallIgnored
             worker.awaitTermination(3, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            LOGGER.error(e);
             Thread.currentThread().interrupt();
         }
         LOGGER.info("Goodbye!");

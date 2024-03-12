@@ -31,7 +31,10 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ConnectionListener {
@@ -193,21 +196,29 @@ public class ConnectionListener {
                 .connect(serverInfo.getHost(), serverInfo.getPort());
     }
 
-    public void closeFutures() {
-        for (ChannelFuture future : futures) {
-            if (future.channel().isActive() || future.channel().isOpen()) {
-                LOGGER.info("Closing future/listener: {}", future.channel().toString());
-                future.channel().close().syncUninterruptibly();
+    public @NotNull CompletableFuture<Void> closeFutures() {
+        return CompletableFuture.runAsync(() -> {
+            for (ChannelFuture future : futures) {
+                if (future.channel().isActive() || future.channel().isOpen()) {
+                    LOGGER.info("Closing future/listener: {}", future.channel().toString());
+                    future.channel().close().syncUninterruptibly();
+                }
             }
-        }
-        futures.clear();
+            futures.clear();
+        });
     }
 
-    public void close() {
-        closeFutures();
-        LOGGER.info("Shutting down event loop");
-        clientWorkerGroup.shutdownGracefully().syncUninterruptibly();
-        workerGroup.shutdownGracefully().syncUninterruptibly();
-        bossGroup.shutdownGracefully().syncUninterruptibly();
+    public @NotNull CompletableFuture<Void> close() {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                closeFutures().get(3, TimeUnit.MINUTES);
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                LOGGER.error(e);
+            }
+            LOGGER.info("Shutting down event loop");
+            clientWorkerGroup.shutdownGracefully().syncUninterruptibly();
+            workerGroup.shutdownGracefully().syncUninterruptibly();
+            bossGroup.shutdownGracefully().syncUninterruptibly();
+        });
     }
 }
