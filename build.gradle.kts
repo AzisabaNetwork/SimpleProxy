@@ -8,7 +8,7 @@ plugins {
 group = "net.azisaba.simpleproxy"
 version = "2.0.1"
 
-extra.set("log4jVersion", "2.23.1")
+extra.set("log4jVersion", "2.24.1")
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(11))
