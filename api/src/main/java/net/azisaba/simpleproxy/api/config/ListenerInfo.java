@@ -27,6 +27,8 @@ public interface ListenerInfo {
     @Nullable
     String getType();
 
+    boolean isConnectOnActive();
+
     /**
      * Returns the raw config object.
      * @return the config

@@ -25,6 +25,7 @@ public class ListenerInfoImpl implements ListenerInfo {
     private final int timeout;
     private final Protocol protocol;
     private final String type;
+    private final boolean connectOnActive;
 
     public ListenerInfoImpl(@NotNull YamlObject config,
                             @NotNull String host,
@@ -34,7 +35,8 @@ public class ListenerInfoImpl implements ListenerInfo {
                             int initialTimeout,
                             int timeout,
                             @NotNull Protocol protocol,
-                            @Nullable String type) {
+                            @Nullable String type,
+                            boolean connectOnActive) {
         if (listenPort <= 0 || listenPort > 65535) throw new RuntimeException("Port is out of range: " + listenPort);
         Objects.requireNonNull(config, "config cannot be null");
         Objects.requireNonNull(host, "host cannot be null");
@@ -48,6 +50,7 @@ public class ListenerInfoImpl implements ListenerInfo {
         this.timeout = timeout;
         this.protocol = protocol;
         this.type = type;
+        this.connectOnActive = connectOnActive;
     }
 
     public ListenerInfoImpl(@NotNull YamlObject obj) {
@@ -62,7 +65,8 @@ public class ListenerInfoImpl implements ListenerInfo {
                 obj.getInt("initialTimeout", 1000 * 5), // 5 seconds
                 obj.getInt("timeout", 1000 * 30), // 30 seconds
                 Protocol.valueOf(obj.getString("protocol", "tcp").toUpperCase(Locale.ROOT)),
-                obj.getString("type")
+                obj.getString("type"),
+                obj.getBoolean("connectOnActive", false)
         );
     }
 
@@ -108,6 +112,11 @@ public class ListenerInfoImpl implements ListenerInfo {
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public boolean isConnectOnActive() {
+        return connectOnActive;
     }
 
     @Override

@@ -53,32 +53,39 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
         super.channelActive(ctx);
         ctx.read();
         if (ProxyConfigInstance.debug) {
-            LOGGER.info("Forwarder: Established connection: " + ctx.channel());
+            LOGGER.info("Forwarder: Established connection: {}", ctx.channel());
         }
         active = true;
+        if (listenerInfo.isConnectOnActive()) {
+            connectToRemote();
+        }
     }
 
     public void activate() {
         if (!active) {
             channel.read();
             if (ProxyConfigInstance.debug) {
-                LOGGER.info("Forwarder: Established connection: " + channel);
+                LOGGER.info("Forwarder: Established connection: {}", channel);
             }
         }
         if (remote == null && !remoteConnecting) {
-            if (channel.pipeline().context(ReadTimeoutHandler.class) != null) {
-                channel.pipeline().remove(ReadTimeoutHandler.class);
-                channel.pipeline().addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS));
-            }
-            remoteConnecting = true;
-            if (ProxyConfigInstance.debug) {
-                LOGGER.info("Forwarder: Connecting to remote server: " + remoteServerInfo);
-            }
-            ChannelFuture future = ProxyInstance.getInstance()
-                    .getConnectionListener()
-                    .connect(this, remoteServerInfo);
-            remote = future.channel();
+            connectToRemote();
         }
+    }
+
+    private void connectToRemote() {
+        if (channel.pipeline().context(ReadTimeoutHandler.class) != null) {
+            channel.pipeline().remove(ReadTimeoutHandler.class);
+            channel.pipeline().addFirst(new ReadTimeoutHandler(listenerInfo.getTimeout(), TimeUnit.MILLISECONDS));
+        }
+        remoteConnecting = true;
+        if (ProxyConfigInstance.debug) {
+            LOGGER.info("Forwarder: Connecting to remote server: {}", remoteServerInfo);
+        }
+        ChannelFuture future = ProxyInstance.getInstance()
+                .getConnectionListener()
+                .connect(this, remoteServerInfo);
+        remote = future.channel();
     }
 
     public void deactivate() {

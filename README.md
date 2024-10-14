@@ -26,6 +26,7 @@ listeners:
   proxyProtocol: true # optional (default: false): whether the proxy protocol should be enabled for this listener
   timeout: 3000 # custom timeout duration in milliseconds (default: 30000 = 30 seconds)
   # ^ don't use 3 seconds as timeout in production because it is (probably) too short
+  connectOnActive: true # required for mysql servers
   servers: # server is selected randomly when a user tries to connect
   - host: 10.0.0.1
     port: 25565
