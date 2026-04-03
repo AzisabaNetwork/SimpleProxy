@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     name: Build with Java ${{ matrix.java }}
-    runs-on: ${{ matrix.os }}
+    runs-on: "ubuntu-latest"
     timeout-minutes: 15
 
     strategy:
