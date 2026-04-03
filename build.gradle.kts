@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.10"
     `java-library`
     `maven-publish`
 }
@@ -17,7 +17,7 @@ java {
 subprojects {
     apply {
         plugin("java")
-        plugin("com.github.johnrengelman.shadow")
+        plugin("com.gradleup.shadow")
         plugin("java-library")
         plugin("maven-publish")
     }
@@ -41,12 +41,17 @@ subprojects {
         }
 
         processResources {
-            from(sourceSets.main.get().resources.srcDirs) {
+            from(
+                sourceSets.main
+                    .get()
+                    .resources.srcDirs,
+            ) {
                 include("**")
-                val tokenReplacementMap = mapOf(
-                    "version" to project.version,
-                    "name" to project.parent!!.name,
-                )
+                val tokenReplacementMap =
+                    mapOf(
+                        "version" to project.version,
+                        "name" to project.parent!!.name,
+                    )
                 filter<org.apache.tools.ant.filters.ReplaceTokens>("tokens" to tokenReplacementMap)
             }
             filteringCharset = "UTF-8"
@@ -85,12 +90,16 @@ allprojects {
             maven {
                 name = "repo"
                 credentials(PasswordCredentials::class)
-                url = uri(
-                    if (project.version.toString().endsWith("SNAPSHOT"))
-                        project.findProperty("deploySnapshotURL") ?: System.getProperty("deploySnapshotURL", "https://repo.azisaba.net/repository/maven-snapshots/")
-                    else
-                        project.findProperty("deployReleasesURL") ?: System.getProperty("deployReleasesURL", "https://repo.azisaba.net/repository/maven-releases/")
-                )
+                url =
+                    uri(
+                        if (project.version.toString().endsWith("SNAPSHOT")) {
+                            project.findProperty("deploySnapshotURL")
+                                ?: System.getProperty("deploySnapshotURL", "https://repo.azisaba.net/repository/maven-snapshots/")
+                        } else {
+                            project.findProperty("deployReleasesURL")
+                                ?: System.getProperty("deployReleasesURL", "https://repo.azisaba.net/repository/maven-releases/")
+                        },
+                    )
             }
         }
 
