@@ -30,7 +30,7 @@ subprojects {
     }
 
     dependencies {
-        compileOnlyApi("org.jetbrains:annotations:24.1.0")
+        compileOnlyApi("org.jetbrains:annotations:26.1.0")
         testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.3")
     }
