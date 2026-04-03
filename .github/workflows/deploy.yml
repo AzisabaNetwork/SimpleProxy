@@ -2,12 +2,12 @@ name: Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'main'
-    paths-ignore:
-      - "**.md"
-      - "renovate.json"
+#  push:
+#    branches:
+#      - 'main'
+#    paths-ignore:
+#      - "**.md"
+#      - "renovate.json"
 
 jobs:
   build:
