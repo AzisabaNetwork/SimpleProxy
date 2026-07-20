@@ -24,24 +24,31 @@ public class RuleCheckHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(@NotNull ChannelHandlerContext ctx) throws Exception {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         if (!(socketAddress instanceof InetSocketAddress)) return;
+        if (!isAllowed(socketAddress)) {
+            ctx.channel().close();
+            return;
+        }
+        ctx.channel().pipeline().remove(this);
+        super.channelActive(ctx);
+    }
+
+    static boolean isAllowed(@NotNull SocketAddress socketAddress) {
         String hostAddress = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
         RuleType ruleType = ProxyConfigInstance.rules.getEffectiveRuleType(hostAddress);
         if (ruleType == RuleType.DENY) {
             if (ProxyConfigInstance.debug) {
                 RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(hostAddress);
-                LOGGER.info("Denied connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
+                LOGGER.info("Denied connection from {} because {}", socketAddress, result.getReason());
             } else if (ProxyConfigInstance.verbose) {
-                LOGGER.info("Denied connection from {}", ctx.channel().remoteAddress());
+                LOGGER.info("Denied connection from {}", socketAddress);
             }
-            ctx.channel().close();
-            return;
+            return false;
         } else if (ruleType == RuleType.ALLOW) {
             if (ProxyConfigInstance.debug) {
                 RuleCheckResult result = ProxyConfigInstance.rules.getEffectiveRuleResult(hostAddress);
-                LOGGER.info("Allowed connection from {} because {}", ctx.channel().remoteAddress(), result.getReason());
+                LOGGER.info("Allowed connection from {} because {}", socketAddress, result.getReason());
             }
         }
-        ctx.channel().pipeline().remove(this);
-        super.channelActive(ctx);
+        return true;
     }
 }

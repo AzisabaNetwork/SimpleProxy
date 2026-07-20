@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.ReferenceCountUtil;
 import net.azisaba.simpleproxy.api.config.ListenerInfo;
 import net.azisaba.simpleproxy.api.config.ServerInfo;
 import net.azisaba.simpleproxy.api.event.connection.RemoteConnectionActiveEvent;
@@ -128,6 +129,11 @@ public class MessageForwarder extends ChannelInboundHandlerAdapter {
             if (sourceAddress != null) {
                 int port = ((HAProxyMessage) msg).sourcePort();
                 this.sourceAddress = new InetSocketAddress(sourceAddress, port);
+                if (!RuleCheckHandler.isAllowed(this.sourceAddress)) {
+                    ReferenceCountUtil.release(msg);
+                    deactivate();
+                    return;
+                }
             }
         }
         if (deactivated || !channel.isActive()) {
