@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Supplier;
 
 public class Util {
@@ -24,13 +25,18 @@ public class Util {
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
-    @Contract(pure = true)
-    @NotNull
+    @Nullable
     public static String readLine() throws IOException {
+        return readLine(System.in);
+    }
+
+    @Nullable
+    static String readLine(@NotNull InputStream input) throws IOException {
         StringBuilder sb = new StringBuilder();
         while (!Thread.currentThread().isInterrupted()) {
-            int i = System.in.read();
-            if (i == -1 || i == 10) return sb.toString();
+            int i = input.read();
+            if (i == -1) return sb.length() == 0 ? null : sb.toString();
+            if (i == 10) return sb.toString();
             char c = (char) i;
             sb.append(c);
         }

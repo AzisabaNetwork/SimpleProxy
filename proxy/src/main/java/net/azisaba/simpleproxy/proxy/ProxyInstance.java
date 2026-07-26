@@ -126,6 +126,10 @@ public class ProxyInstance implements ProxyServer {
             try {
                 while (!Thread.currentThread().isInterrupted() && !stopping) {
                     String s = Util.readLine();
+                    if (s == null) {
+                        LOGGER.info("Console input reached EOF; stopping console input thread");
+                        break;
+                    }
                     handleCommand(s);
                 }
             } catch (Throwable e) {
